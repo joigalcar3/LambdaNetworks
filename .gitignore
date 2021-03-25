@@ -127,3 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+*.xml
+
+CIFAR_10_test/
+
+CIFAR_10_train/
+
+*.iml
+
+runs/
