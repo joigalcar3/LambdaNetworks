@@ -118,7 +118,7 @@ if __name__ == "__main__":
     th = 5                # Threshold number of epochs to change scheduler
     path_save = ".\Checkpoints\model"   # Path for storing the model info
 
-    #%% define transforms
+    #%% Define training and validation transforms
     train_transform = torchvision.transforms.Compose([
         torchvision.transforms.RandomCrop(32, padding=4),
         torchvision.transforms.RandomHorizontalFlip(p=0.5),
@@ -126,8 +126,8 @@ if __name__ == "__main__":
     valid_transform = torchvision.transforms.ToTensor()
 
     # Preparing the dataset
-    download_train = True if os.path.exists(".\CIFAR_10_train") == True else False
-    download_test = True if os.path.exists(".\CIFAR_10_test") == True else False
+    download_train = False if os.path.exists(".\CIFAR_10_train") == True else True
+    download_test = False if os.path.exists(".\CIFAR_10_test") == True else True
 
     cifar10_train = torchvision.datasets.CIFAR10(root=".\CIFAR_10_train", train=True, download=download_train,
                                                  transform=train_transform)
