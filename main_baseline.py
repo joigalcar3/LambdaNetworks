@@ -176,6 +176,17 @@ if __name__ == "__main__":
     # Create a writer to write to Tensorboard
     writer = SummaryWriter()
 
+    # Check if GPU available
+    if torch.cuda.is_available():
+        device = 'cuda'
+        print('You have CUDA device.')
+    else:
+        device = 'cpu'
+        print('Switch to GPU runtime to speed up computation.')
+
+    # Bring model to device
+    model = resnet_nn.to(device)
+
     # Define the criterion
     criterion = nn.CrossEntropyLoss()
 
@@ -186,21 +197,11 @@ if __name__ == "__main__":
     optimizer = optim.Adam(resnet_nn.parameters(), weight_decay=weight_decay, betas=(0.9, 0.9999), lr=initial_lr)
 
     # Create a scheduler
-    # lambda1 = lambda epoch: 0.955 ** epoch
-    # scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
     lambda1 = lambda epoch: epoch+1
     scheduler1 = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
 
     steps = epochs - th       # This is Tmax according to the documentation of cosine annealing
     scheduler2 = optim.lr_scheduler.CosineAnnealingLR(optimizer, steps)
-
-    # Check if GPU available
-    if torch.cuda.is_available():
-        device = 'cuda'
-        print('You have CUDA device.')
-    else:
-        device = 'cpu'
-        print('Switch to GPU runtime to speed up computation.')
 
     # Restart from checkpoint
     max_epoch = 0
@@ -217,8 +218,6 @@ if __name__ == "__main__":
                   .format(filepath, checkpoint['epoch']))
         else:
             print("=> no checkpoint found at '{}'".format('.\Checkpoints'))
-
-    model = resnet_nn.to(torch.device(device))
 
     #%% Train the resnet
     for epoch in tqdm(range(max_epoch, epochs)):  # loop over the dataset multiple times
