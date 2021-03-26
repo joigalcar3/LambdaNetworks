@@ -14,6 +14,9 @@ from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 
+np.random.seed(0)
+torch.manual_seed(0)
+
 class LabelSmoothing(nn.Module):
     """
     NLL loss with label smoothing.
@@ -125,13 +128,13 @@ if __name__ == "__main__":
     b_size = 128   # Batchsize: Table 4 of the original paper
     n_rows_plot = 8    # Number of rows to include in the plot of CIFAR-10
     n_col_plot = 8    # Number of columns to include in the plot of CIFAR-10
-    epochs = 90     # Number of epochs: suggested by Robert-Jan Bruintjes
+    epochs = 180     # Number of epochs: suggested by Robert-Jan Bruintjes
     weight_decay = 1e-4  # Weight decay for the Adam
     initial_lr = 0.32     # Initial learning rate
     th = 5                # Threshold number of epochs to change scheduler
     path_save = ".\Checkpoints\model"   # Path for storing the model info
     smoothing = True       # switch which defines whether label smoothing should take place
-    resume = False      # Resume from the latest checkpoint
+    resume = True      # Resume from the latest checkpoint
 
     if not os.path.exists(".\Checkpoints"):
         os.makedirs(".\Checkpoints")
@@ -183,6 +186,7 @@ if __name__ == "__main__":
     optimizer = optim.Adam(resnet_nn.parameters(), weight_decay=weight_decay, betas=(0.9, 0.9999), lr=initial_lr)
 
     # Restart from checkpoint
+    max_epoch = 0
     if resume:
         if os.listdir('.\Checkpoints') != -1:
             max_epoch = max(list(map(lambda x: int(x[5:x.find('.')]), os.listdir('.\Checkpoints'))))
@@ -190,8 +194,8 @@ if __name__ == "__main__":
             print("=> loading checkpoint '{}'".format(max_epoch))
             checkpoint = torch.load(filepath)
             start_epoch = checkpoint['epoch']
-            resnet_nn.load_state_dict(checkpoint['state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer'])
+            resnet_nn.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(filepath, checkpoint['epoch']))
         else:
@@ -217,7 +221,7 @@ if __name__ == "__main__":
     model = resnet_nn.to(device)
 
     #%% Train the resnet
-    for epoch in tqdm(range(epochs)):  # loop over the dataset multiple times
+    for epoch in tqdm(range(max_epoch, epochs)):  # loop over the dataset multiple times
         # Train on data
         train_loss, train_acc = train(train_loader, resnet_nn, optimizer, criterion, device, label_smoothing, smoothing)
 
