@@ -195,10 +195,10 @@ if __name__ == "__main__":
         # Obtain the new learning rate
         if epoch < th:
             scheduler1.step()
-            print(scheduler1.get_lr())
+            print(scheduler1.get_last_lr())
         else:
             scheduler2.step()
-            print(scheduler2.get_lr())
+            print(scheduler2.get_last_lr())
 
         # Save checkpoint
         if epoch % 5 == 0:
