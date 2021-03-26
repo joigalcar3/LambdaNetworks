@@ -185,22 +185,6 @@ if __name__ == "__main__":
     # Define the optimizer
     optimizer = optim.Adam(resnet_nn.parameters(), weight_decay=weight_decay, betas=(0.9, 0.9999), lr=initial_lr)
 
-    # Restart from checkpoint
-    max_epoch = 0
-    if resume:
-        if os.listdir('.\Checkpoints') != -1:
-            max_epoch = max(list(map(lambda x: int(x[5:x.find('.')]), os.listdir('.\Checkpoints'))))
-            filepath = '.\Checkpoints\model' + str(max_epoch) + '.pt'
-            print("=> loading checkpoint '{}'".format(max_epoch))
-            checkpoint = torch.load(filepath)
-            start_epoch = checkpoint['epoch']
-            resnet_nn.load_state_dict(checkpoint['model_state_dict'])
-            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            print("=> loaded checkpoint '{}' (epoch {})"
-                  .format(filepath, checkpoint['epoch']))
-        else:
-            print("=> no checkpoint found at '{}'".format('.\Checkpoints'))
-
     # Create a scheduler
     # lambda1 = lambda epoch: 0.955 ** epoch
     # scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
@@ -218,7 +202,23 @@ if __name__ == "__main__":
         device = 'cpu'
         print('Switch to GPU runtime to speed up computation.')
 
-    model = resnet_nn.to(device)
+    # Restart from checkpoint
+    max_epoch = 0
+    if resume:
+        if os.listdir('.\Checkpoints') != -1:
+            max_epoch = max(list(map(lambda x: int(x[5:x.find('.')]), os.listdir('.\Checkpoints'))))
+            filepath = '.\Checkpoints\model' + str(max_epoch) + '.pt'
+            print("=> loading checkpoint '{}'".format(max_epoch))
+            checkpoint = torch.load(filepath, map_location=device)
+            start_epoch = checkpoint['epoch']
+            resnet_nn.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            print("=> loaded checkpoint '{}' (epoch {})"
+                  .format(filepath, checkpoint['epoch']))
+        else:
+            print("=> no checkpoint found at '{}'".format('.\Checkpoints'))
+
+    model = resnet_nn.to(torch.device(device))
 
     #%% Train the resnet
     for epoch in tqdm(range(max_epoch, epochs)):  # loop over the dataset multiple times
