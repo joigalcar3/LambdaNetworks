@@ -164,7 +164,7 @@ if __name__ == "__main__":
     plt.show()
 
     #%% Prepare the model
-    resnet_nn = resnet50(pretrained=False, progress=True)
+    resnet_nn = resnet50(pretrained=False, progress=True, num_classes = 10)
 
     # Print network architecture using torchsummary
     summary(resnet_nn, tuple(input[0].shape), device='cpu')
@@ -236,3 +236,6 @@ if __name__ == "__main__":
     print('Finished Training')
     writer.flush()
     writer.close()
+
+# To be run on the terminal: tensorboard --logdir=runs
+# To clean tensorboard: !rm -r runs
