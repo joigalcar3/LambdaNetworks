@@ -131,6 +131,7 @@ if __name__ == "__main__":
     th = 5                # Threshold number of epochs to change scheduler
     path_save = ".\Checkpoints\model"   # Path for storing the model info
     smoothing = True       # switch which defines whether label smoothing should take place
+    resume = False      # Resume from the latest checkpoint
 
     if not os.path.exists(".\Checkpoints"):
         os.makedirs(".\Checkpoints")
@@ -180,6 +181,21 @@ if __name__ == "__main__":
 
     # Define the optimizer
     optimizer = optim.Adam(resnet_nn.parameters(), weight_decay=weight_decay, betas=(0.9, 0.9999), lr=initial_lr)
+
+    # Restart from checkpoint
+    if resume:
+        if os.listdir('.\Checkpoints') != -1:
+            max_epoch = max(list(map(lambda x: int(x[5:x.find('.')]), os.listdir('.\Checkpoints'))))
+            filepath = '.\Checkpoints\model' + str(max_epoch) + '.pt'
+            print("=> loading checkpoint '{}'".format(max_epoch))
+            checkpoint = torch.load(filepath)
+            start_epoch = checkpoint['epoch']
+            resnet_nn.load_state_dict(checkpoint['state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            print("=> loaded checkpoint '{}' (epoch {})"
+                  .format(filepath, checkpoint['epoch']))
+        else:
+            print("=> no checkpoint found at '{}'".format('.\Checkpoints'))
 
     # Create a scheduler
     # lambda1 = lambda epoch: 0.955 ** epoch
