@@ -18,7 +18,11 @@ class LambdaLayer(nn.Module):
         self.toqueries = nn.Linear(self.d, self.k * self.h, bias=False)
         self.tokeys    = nn.Linear(self.d, self.k, bias=False)
         self.tovalues  = nn.Linear(self.d, self.v, bias=False)
-        self.E = nn.Parameter(torch.Tensor(self.n, self.m, self.k))  # n-m-k
+        self.E = nn.Parameter(torch.Tensor(self.n, self.m, self.k), requires_grad=True)  # n-m-k
+
+        # Create batchnormalization layers
+        self.bn_values = nn.BatchNorm1d(self.m)
+        self.bn_queries = nn.BatchNorm2d(self.k)
 
         # Keys softmax function
         self.softmax = nn.Softmax(dim=1)
@@ -32,7 +36,7 @@ class LambdaLayer(nn.Module):
         """
         torch.nn.init.normal_(self.E, mean=0.0, std=1.0)
         std_kv = 1/torch.sqrt(self.d)
-        std_q = 1/torch.sqrt(self.d*self.k)
+        std_q = 1/torch.sqrt(self.d * self.k)
         torch.nn.init.normal_(self.toqueries.weight, mean=0.0, std=std_q)
         torch.nn.init.normal_(self.tokeys.weight, mean=0.0, std=std_kv)
         torch.nn.init.normal_(self.tovalues.weight, mean=0.0, std=std_kv)
@@ -40,18 +44,27 @@ class LambdaLayer(nn.Module):
 
     def forward(self, x, c):
         # Obtain the batch_size
-        b, _, _ = x.size()     # b-n-d
+        b, d, n1, n2 = x.size()     # b-d-n1-n2
+        n = n1*n2
+        x = torch.reshape(x, [b, n, d])
 
-        # Compute the keys, values and queries
+        # Compute the keys
         keys = self.tokeys(c)       # b-m-k
-        values = self.tovalues(c)   # b-m-v
-        queries = torch.reshape(self.toqueries(x), [b, self.n, self.h, self.k])  # b-d-h-k
+        softmax_keys = self.softmax(keys)
 
-        # Obtain the right query shape
+        # Compute the values
+        values = self.bn_values(self.tovalues(c))   # b-m-v
+
+        # Compute the queries
+        # queries = torch.reshape(self.toqueries(x), [b, self.n, self.h, self.k])  # b-d-h-k
+        queries = torch.reshape(self.toqueries(x), [b, n, self.k, self.h])  # b-n-k-h
+        queries = torch.transpose(queries, 1, 2)  # b-k-n-h
+        queries = self.bn_queries(queries)  # b-k-n-h
+        queries = torch.transpose(queries, 1, 2)  # b-n-k-h
+        queries = torch.transpose(queries, 2, 3)  # b-n-h-k
         queries = torch.transpose(queries, 1, 2)   # b-h-n-k
 
         # Compute lambdac
-        softmax_keys = self.softmax(keys)
         content_lambda = torch.einsum('bmk, bmv->bkv', softmax_keys, values)    # b-k-v
 
         # Compute position lambda
@@ -64,6 +77,6 @@ class LambdaLayer(nn.Module):
         position_output = torch.einsum('bhnk, bnkv->bnhv', queries, position_lambdas)   # b-n-h-v
 
         # Compute output
-        output = torch.reshape(content_output + position_output, [b, self.n, self.d])   # b-n-d
+        output = torch.reshape(content_output + position_output, [b, n, d])   # b-n-d
 
         return output
