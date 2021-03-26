@@ -27,16 +27,20 @@ class LabelSmoothing(nn.Module):
         self.confidence = 1.0 - smoothing
         self.smoothing = smoothing
 
-    def forward(self, x, target, criterion):
-        logprobs = criterion(x, target)
+    def forward(self, x, target):
+        """
+        Function of label smoothing according to the equations in page 7 of the paper: 'Rethinking the Inception
+        Architecture for Computer Vision'
+        """
+        logprobs = nn.functional.log_softmax(x, dim=-1)     # Computes the log softmax of all the predictions. For each datapoint, there are 1000 numbers, each represents a label
 
-        nll_loss = -logprobs.gather(dim=-1, index=target.unsqueeze(1))
-        nll_loss = nll_loss.squeeze(1)
-        smooth_loss = -logprobs.mean(dim=-1)
-        loss = self.confidence * nll_loss + self.smoothing * smooth_loss
-        return loss.mean()
+        nll_loss = -logprobs.gather(dim=-1, index=target.unsqueeze(1))   # Obtain the prediction obtained for the right labels. They should be as close to 1 as possible
+        nll_loss = nll_loss.squeeze(1)       # Compute the first term of the equation of the paper, the predicted value of the labels
+        smooth_loss = -logprobs.mean(dim=-1)   # Compute the second term, which is the average among all label predictions
+        loss = self.confidence * nll_loss + self.smoothing * smooth_loss    # Sum both terms weighted with the smoothing
+        return loss.mean()    # Compute the batch loss
 
-def train(train_loader, net, optimizer, criterion):
+def train(train_loader, net, optimizer, criterion, label_smoothing, smoothing=False):
     """
     Trains network for one epoch in batches.
 
@@ -61,7 +65,10 @@ def train(train_loader, net, optimizer, criterion):
 
         # forward + backward + optimize
         outputs = net(inputs)
-        loss = criterion(outputs, labels)
+        if smoothing:
+            loss = label_smoothing(outputs, labels)
+        else:
+            loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
 
@@ -117,6 +124,7 @@ if __name__ == "__main__":
     initial_lr = 0.32     # Initial learning rate
     th = 5                # Threshold number of epochs to change scheduler
     path_save = ".\Checkpoints\model"   # Path for storing the model info
+    smoothing = True       # switch which defines whether label smoothing should take place
 
     #%% Define training and validation transforms
     train_transform = torchvision.transforms.Compose([
@@ -158,6 +166,9 @@ if __name__ == "__main__":
     # Define the criterion
     criterion = nn.CrossEntropyLoss()
 
+    # Define the label smoother
+    label_smoothing = LabelSmoothing(0.1)
+
     # Define the optimizer
     optimizer = optim.Adam(resnet_nn.parameters(), weight_decay=weight_decay, betas=(0.9, 0.9999), lr=initial_lr)
 
@@ -173,7 +184,7 @@ if __name__ == "__main__":
     #%% Train the resnet
     for epoch in tqdm(range(epochs)):  # loop over the dataset multiple times
         # Train on data
-        train_loss, train_acc = train(train_loader, resnet_nn, optimizer, criterion)
+        train_loss, train_acc = train(train_loader, resnet_nn, optimizer, criterion, label_smoothing, smoothing)
 
         # Test on data
         test_loss, test_acc = test(test_loader, resnet_nn, criterion)
