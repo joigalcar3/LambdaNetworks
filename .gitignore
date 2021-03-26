@@ -137,3 +137,5 @@ CIFAR_10_train/
 *.iml
 
 runs/
+
+Checkpoints/

@@ -40,7 +40,7 @@ class LabelSmoothing(nn.Module):
         loss = self.confidence * nll_loss + self.smoothing * smooth_loss    # Sum both terms weighted with the smoothing
         return loss.mean()    # Compute the batch loss
 
-def train(train_loader, net, optimizer, criterion, label_smoothing, smoothing=False):
+def train(train_loader, net, optimizer, criterion, device, label_smoothing, smoothing=False):
     """
     Trains network for one epoch in batches.
 
@@ -59,6 +59,9 @@ def train(train_loader, net, optimizer, criterion, label_smoothing, smoothing=Fa
     for i, data in enumerate(train_loader):
         # get the inputs; data is a list of [inputs, labels]
         inputs, labels = data
+
+        # Move data to target device
+        inputs, labels = inputs.to(device), labels.to(device)
 
         # zero the parameter gradients
         optimizer.zero_grad()
@@ -81,7 +84,7 @@ def train(train_loader, net, optimizer, criterion, label_smoothing, smoothing=Fa
     return avg_loss / len(train_loader), 100 * correct / total
 
 
-def test(test_loader, net, criterion):
+def test(test_loader, net, criterion, device):
     """
     Evaluates network in batches.
 
@@ -101,6 +104,9 @@ def test(test_loader, net, criterion):
         for data in test_loader:
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
+
+            # Move data to target device
+            inputs, labels = inputs.to(device), labels.to(device)
 
             # forward pass
             outputs = net(inputs)
@@ -126,7 +132,7 @@ if __name__ == "__main__":
     path_save = ".\Checkpoints\model"   # Path for storing the model info
     smoothing = True       # switch which defines whether label smoothing should take place
 
-    if os.path.exists(".\Checkpoints"):
+    if not os.path.exists(".\Checkpoints"):
         os.makedirs(".\Checkpoints")
 
     #%% Define training and validation transforms
@@ -184,13 +190,23 @@ if __name__ == "__main__":
     steps = epochs - th       # This is Tmax according to the documentation of cosine annealing
     scheduler2 = optim.lr_scheduler.CosineAnnealingLR(optimizer, steps)
 
+    # Check if GPU available
+    if torch.cuda.is_available():
+        device = 'cuda'
+        print('You have CUDA device.')
+    else:
+        device = 'cpu'
+        print('Switch to GPU runtime to speed up computation.')
+
+    model = resnet_nn.to(device)
+
     #%% Train the resnet
     for epoch in tqdm(range(epochs)):  # loop over the dataset multiple times
         # Train on data
-        train_loss, train_acc = train(train_loader, resnet_nn, optimizer, criterion, label_smoothing, smoothing)
+        train_loss, train_acc = train(train_loader, resnet_nn, optimizer, criterion, device, label_smoothing, smoothing)
 
         # Test on data
-        test_loss, test_acc = test(test_loader, resnet_nn, criterion)
+        test_loss, test_acc = test(test_loader, resnet_nn, criterion, device)
 
         # Obtain the new learning rate
         if epoch < th:
