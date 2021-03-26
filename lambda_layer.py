@@ -1,3 +1,5 @@
+import torch
+
 def lambda_layer(queries, keys, embeddings, values):
     """Multi-query lambda layer."""
     # b: batch, n: input length, m: context length,

@@ -184,7 +184,7 @@ if __name__ == "__main__":
     # Create a scheduler
     # lambda1 = lambda epoch: 0.955 ** epoch
     # scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
-    lambda1 = lambda epoch: epoch
+    lambda1 = lambda epoch: epoch+1
     scheduler1 = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
 
     steps = epochs - th       # This is Tmax according to the documentation of cosine annealing
