@@ -126,6 +126,9 @@ if __name__ == "__main__":
     path_save = ".\Checkpoints\model"   # Path for storing the model info
     smoothing = True       # switch which defines whether label smoothing should take place
 
+    if os.path.exists(".\Checkpoints"):
+        os.makedirs(".\Checkpoints")
+
     #%% Define training and validation transforms
     train_transform = torchvision.transforms.Compose([
         torchvision.transforms.RandomCrop(32, padding=4),
@@ -190,7 +193,7 @@ if __name__ == "__main__":
         test_loss, test_acc = test(test_loader, resnet_nn, criterion)
 
         # Obtain the new learning rate
-        if epoch <= th:
+        if epoch < th:
             scheduler1.step()
             print(scheduler1.get_lr())
         else:
