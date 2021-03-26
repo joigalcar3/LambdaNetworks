@@ -1,19 +1,6 @@
 import torch
 import torch.nn as nn
 
-def lambda_layer(queries, keys, embeddings, values):
-    """Multi-query lambda layer."""
-    # b: batch, n: input length, m: context length,
-    # k: query/key depth, v: value depth,
-    # h: number of heads, d: output dimension.
-    content_lambda = torch.einsum(torch.softmax(keys), values, 'bmk, bmv->bkv')
-    position_lambdas = torch.einsum(embeddings, values, ’nmk,bmv->bnkv’)
-    content_output = torch.einsum(queries, content_lambda, ’bhnk,bkv->bnhv’)
-    position_output = torch.einsum(queries, position_lambdas, ’bhnk,bnkv->bnhv’)
-    output = torch.reshape(content_output + position_output, [b, n, d])
-    return output
-
-
 class LambdaLayer(nn.Module):
     """Multi-query lambda layer."""
 
@@ -43,12 +30,13 @@ class LambdaLayer(nn.Module):
         """
         Initialize network parameters.
         """
+        torch.nn.init.normal_(self.E, mean=0.0, std=1.0)
+        std_kv = 1/torch.sqrt(self.d)
+        std_q = 1/torch.sqrt(self.d*self.k)
+        torch.nn.init.normal_(self.toqueries.weight, mean=0.0, std=std_q)
+        torch.nn.init.normal_(self.tokeys.weight, mean=0.0, std=std_kv)
+        torch.nn.init.normal_(self.tovalues.weight, mean=0.0, std=std_kv)
 
-        std = 1.0 / math.sqrt(self.hidden_size)
-        self.weight_xh.data.uniform_(-std, std)
-        self.weight_hh.data.uniform_(-std, std)
-        self.bias_xh.data.uniform_(-std, std)
-        self.bias_hh.data.uniform_(-std, std)
 
     def forward(self, x, c):
         # Obtain the batch_size
