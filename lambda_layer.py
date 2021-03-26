@@ -6,7 +6,7 @@ def lambda_layer(queries, keys, embeddings, values):
     # b: batch, n: input length, m: context length,
     # k: query/key depth, v: value depth,
     # h: number of heads, d: output dimension.
-    content_lambda = torch.einsum(torch.softmax(keys), values, ’bmk, bmv->bkv’)
+    content_lambda = torch.einsum(torch.softmax(keys), values, 'bmk, bmv->bkv')
     position_lambdas = torch.einsum(embeddings, values, ’nmk,bmv->bnkv’)
     content_output = torch.einsum(queries, content_lambda, ’bhnk,bkv->bnhv’)
     position_output = torch.einsum(queries, position_lambdas, ’bhnk,bnkv->bnhv’)
@@ -15,40 +15,26 @@ def lambda_layer(queries, keys, embeddings, values):
 
 
 class LambdaLayer(nn.Module):
-    """
-    LambdaLayer implementation
-    """
+    """Multi-query lambda layer."""
 
-    def __init__(self, input_size, context_size, number_filters, hidden_size, output_size):
+    def __init__(self, input_size, context_size, value_size, qk_size, output_size, heads):
         super(LambdaLayer, self).__init__()
 
         self.n = input_size
         self.m = context_size
-        self.d = number_filters
-        self.k = hidden_size
-        self.v = output_size
+        self.d = output_size
+        self.k = qk_size
+        self.v = value_size
+        self.h = heads
 
-        # Matrix translates context to keys
-        self.weight_ck = None
+        # These compute the queries, keys and values
+        self.toqueries = nn.Linear(self.d, self.k * self.h, bias=False)
+        self.tokeys    = nn.Linear(self.d, self.k, bias=False)
+        self.tovalues  = nn.Linear(self.d, self.v, bias=False)
+        self.E = nn.Parameter(torch.Tensor(self.n, self.m, self.k))  # n-m-k
 
-        # Matrix translates context to values
-        self.weight_cv = None
-
-        # Matrix translates input to queries
-        self.weight_xq = None
-
-        # Matrix of position
-        self.E = None
-
-        # All parameters
-        self.weight_ck = nn.Parameter(torch.Tensor(self.d, self.k))
-        self.weight_cv = nn.Parameter(torch.Tensor(self.d, self.v))
-        self.bias_xq = nn.Parameter(torch.Tensor(self.d, self.k))
-        self.E = nn.Parameter(torch.Tensor(self.m, self.k, self.n))
-
-        ########################################################################
-        #                         END OF YOUR CODE                             #
-        ########################################################################
+        # Keys softmax function
+        self.softmax = nn.Softmax(dim=1)
 
         # Initialize parameters
         self.reset_params()
@@ -64,64 +50,32 @@ class LambdaLayer(nn.Module):
         self.bias_xh.data.uniform_(-std, std)
         self.bias_hh.data.uniform_(-std, std)
 
-    def forward(self, x):
-        """
-        Args:
-            x: input with shape (N, T, D) where N is number of samples, T is
-                number of timestep and D is input size which must be equal to
-                self.input_size.
+    def forward(self, x, c):
+        # Obtain the batch_size
+        b, _, _ = x.size()     # b-n-d
 
-        Returns:
-            y: output with a shape of (N, T, H) where H is hidden size
-        """
+        # Compute the keys, values and queries
+        keys = self.tokeys(c)       # b-m-k
+        values = self.tovalues(c)   # b-m-v
+        queries = torch.reshape(self.toqueries(x), [b, self.n, self.h, self.k])  # b-d-h-k
 
-        # Transpose input for efficient vectorized calculation. After transposing
-        # the input will have (T, N, D).
-        x = x.transpose(0, 1)
+        # Obtain the right query shape
+        queries = torch.transpose(queries, 1, 2)   # b-h-n-k
 
-        # Unpack dimensions
-        T, N, H = x.shape[0], x.shape[1], self.hidden_size
+        # Compute lambdac
+        softmax_keys = self.softmax(keys)
+        content_lambda = torch.einsum('bmk, bmv->bkv', softmax_keys, values)    # b-k-v
 
-        # Initialize hidden and cell states to zero. There will be one hidden
-        # and cell state for each input, so they will have shape of (N, H)
-        h0 = torch.zeros(N, H, device=x.device)
-        c0 = torch.zeros(N, H, device=x.device)
+        # Compute position lambda
+        position_lambdas = torch.einsum('nmk, bmv->bnkv', self.E, values)       # b-n-k-v
 
-        # Define a list to store outputs. We will then stack them.
-        y = []
+        # Compute content output
+        content_output = torch.einsum('bhnk, bkv->bnhv', queries, content_lambda)   # b-n-h-v
 
-        ########################################################################
-        #                 TODO: Implement forward pass of LSTM                 #
-        ########################################################################
+        # Compute position output
+        position_output = torch.einsum('bhnk, bnkv->bnhv', queries, position_lambdas)   # b-n-h-v
 
-        ht_1 = h0
-        ct_1 = c0
-        for t in range(T):
-            # LSTM update rule
-            xh = torch.addmm(self.bias_xh, x[t], self.weight_xh)
-            hh = torch.addmm(self.bias_hh, ht_1, self.weight_hh)
-            it = torch.sigmoid(xh[:, 0:H] + hh[:, 0:H])
-            ft = torch.sigmoid(xh[:, H:2 * H] + hh[:, H:2 * H])
-            gt = torch.tanh(xh[:, 2 * H:3 * H] + hh[:, 2 * H:3 * H])
-            ot = torch.sigmoid(xh[:, 3 * H:4 * H] + hh[:, 3 * H:4 * H])
-            ct = ft * ct_1 + it * gt
-            ht = ot * torch.tanh(ct)
+        # Compute output
+        output = torch.reshape(content_output + position_output, [b, self.n, self.d])   # b-n-d
 
-            # Store output
-            y.append(ht)
-
-            # For the next iteration c(t-1) and h(t-1) will be current ct and ht
-            ct_1 = ct
-            ht_1 = ht
-
-        ########################################################################
-        #                         END OF YOUR CODE                             #
-        ########################################################################
-
-        # Stack the outputs. After this operation, output will have shape of
-        # (T, N, H)
-        y = torch.stack(y)
-
-        # Switch time and batch dimension, (T, N, H) -> (N, T, H)
-        y = y.transpose(0, 1)
-        return y
+        return output
