@@ -14,6 +14,9 @@ from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 
+import socket
+from datetime import datetime
+
 np.random.seed(0)
 torch.manual_seed(0)
 
@@ -136,8 +139,8 @@ if __name__ == "__main__":
     smoothing = True       # switch which defines whether label smoothing should take place
     resume = True      # Resume from the latest checkpoint
 
-    if not os.path.exists(".\Checkpoints"):
-        os.makedirs(".\Checkpoints")
+    if not os.path.exists("../Checkpoints"):
+        os.makedirs("../Checkpoints")
 
     #%% Define training and validation transforms
     train_transform = torchvision.transforms.Compose([
@@ -147,8 +150,8 @@ if __name__ == "__main__":
     valid_transform = torchvision.transforms.ToTensor()
 
     # Preparing the dataset
-    download_train = False if os.path.exists(".\CIFAR_10_train") == True else True
-    download_test = False if os.path.exists(".\CIFAR_10_test") == True else True
+    download_train = False if os.path.exists("../CIFAR_10_train") == True else True
+    download_test = False if os.path.exists("../CIFAR_10_test") == True else True
 
     cifar10_train = torchvision.datasets.CIFAR10(root=".\CIFAR_10_train", train=True, download=download_train,
                                                  transform=train_transform)
@@ -174,7 +177,10 @@ if __name__ == "__main__":
     summary(resnet_nn, tuple(input[0].shape), device='cpu')
 
     # Create a writer to write to Tensorboard
-    writer = SummaryWriter()
+    current_time = datetime.now().strftime('%b%d_%H-%M-%S')
+    log_dir = os.path.join('../runs', 'baseline', current_time + '_' + socket.gethostname())
+    writer = SummaryWriter(log_dir)
+
 
     # Check if GPU available
     if torch.cuda.is_available():
@@ -206,9 +212,10 @@ if __name__ == "__main__":
     # Restart from checkpoint
     max_epoch = 0
     if resume:
-        if os.listdir('.\Checkpoints') != -1:
-            max_epoch = max(list(map(lambda x: int(x[5:x.find('.')]), os.listdir('.\Checkpoints'))))
-            filepath = '.\Checkpoints\model' + str(max_epoch) + '.pt'
+        folder_checkpoint = '.\Checkpoints\\Baseline'
+        if os.listdir(folder_checkpoint) != -1:
+            max_epoch = max(list(map(lambda x: int(x[5:x.find('.')]), os.listdir(folder_checkpoint))))
+            filepath = folder_checkpoint + '\model' + str(max_epoch) + '.pt'
             print("=> loading checkpoint '{}'".format(max_epoch))
             checkpoint = torch.load(filepath, map_location=device)
             start_epoch = checkpoint['epoch']
@@ -217,7 +224,7 @@ if __name__ == "__main__":
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(filepath, checkpoint['epoch']))
         else:
-            print("=> no checkpoint found at '{}'".format('.\Checkpoints'))
+            print("=> no checkpoint found at '{}'".format(folder_checkpoint))
 
     #%% Train the resnet
     for epoch in tqdm(range(max_epoch, epochs)):  # loop over the dataset multiple times
