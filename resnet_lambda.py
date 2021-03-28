@@ -46,15 +46,15 @@ class Bottleneck(nn.Module):
         self,
         inplanes: int,
         planes: int,
-        input_size: int,
         stride: int = 1,
-        context_size: int = 23*23,
-        qk_size: int = 16,
-        heads: int = 4,
         downsample: Optional[nn.Module] = None,
         groups: int = 1,
         base_width: int = 64,
-        norm_layer: Optional[Callable[..., nn.Module]] = None
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        context_size: int = 23 * 23,
+        qk_size: int = 16,
+        heads: int = 4,
+        input_size: int = 8 * 8
     ) -> None:
 
         super(Bottleneck, self).__init__()
@@ -111,12 +111,19 @@ class ResNet(nn.Module):
         groups: int = 1,
         width_per_group: int = 64,
         replace_stride_with_dilation: Optional[List[bool]] = None,
-        norm_layer: Optional[Callable[..., nn.Module]] = None
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        context_size: int = 23 * 23,
+        qk_size: int = 16,
+        heads: int = 4,
     ) -> None:
         super(ResNet, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
+
+        self.context_size = context_size
+        self.qk_size = qk_size
+        self.heads = heads
 
         self.inplanes = 64
         self.dilation = 1
@@ -163,7 +170,6 @@ class ResNet(nn.Module):
                     stride: int = 1, dilate: bool = False) -> nn.Sequential:
         norm_layer = self._norm_layer
         downsample = None
-        previous_dilation = self.dilation
         if dilate:
             self.dilation *= stride
             stride = 1
@@ -175,12 +181,13 @@ class ResNet(nn.Module):
 
         layers = []
         layers.append(block(self.inplanes, planes, stride, downsample, self.groups,
-                            self.base_width, norm_layer))
+                            self.base_width, norm_layer, self.context_size, self.qk_size, self.heads))
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
             layers.append(block(self.inplanes, planes, groups=self.groups,
                                 base_width=self.base_width,
-                                norm_layer=norm_layer))
+                                norm_layer=norm_layer, context_size=self.context_size, qk_size=self.qk_size,
+                                heads=self.heads))
 
         return nn.Sequential(*layers)
 

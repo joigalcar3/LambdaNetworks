@@ -1,8 +1,11 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
 class LambdaLayer(nn.Module):
-    """Multi-query lambda layer."""
+    """Multi-query lambda layer. The code has been written with the assumption that substitution
+     of the 3x3 conv layers by the lambda layers does not change the image size. Which in the case
+      of ResNet50 is 8x8."""
 
     def __init__(self, input_size, context_size, value_size, qk_size, output_size, heads):
         super(LambdaLayer, self).__init__()
@@ -35,8 +38,8 @@ class LambdaLayer(nn.Module):
         Initialize network parameters.
         """
         torch.nn.init.normal_(self.E, mean=0.0, std=1.0)
-        std_kv = 1/torch.sqrt(self.d)
-        std_q = 1/torch.sqrt(self.d * self.k)
+        std_kv = 1/np.sqrt(self.d)
+        std_q = 1/np.sqrt(self.d * self.k)
         torch.nn.init.normal_(self.toqueries.weight, mean=0.0, std=std_q)
         torch.nn.init.normal_(self.tokeys.weight, mean=0.0, std=std_kv)
         torch.nn.init.normal_(self.tovalues.weight, mean=0.0, std=std_kv)
