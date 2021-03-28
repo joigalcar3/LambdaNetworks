@@ -55,11 +55,11 @@ if __name__ == "__main__":
     heads = 4                  # Number of heads: h
     n_rows_plot = 8            # Number of rows to include in the plot of CIFAR-10
     n_col_plot = 8             # Number of columns to include in the plot of CIFAR-10
-    epochs = 180               # Number of epochs: suggested by Robert-Jan Bruintjes
+    epochs = 90              # Number of epochs: suggested by Robert-Jan Bruintjes
     weight_decay = 1e-4        # Weight decay for the Adam
-    initial_lr = 0.32          # Initial learning rate
+    initial_lr = 0.01          # Initial learning rate
     th = 5                     # Threshold number of epochs to change scheduler
-    model_type = 1             # Type of model: 0 = baseline; 1 = lambda
+    model_type = 0            # Type of model: 0 = baseline; 1 = lambda
     resume = False             # Resume from the latest checkpoint
     smoothing = True           # switch which defines whether label smoothing should take place
     cp_dir = ".\Checkpoints"   # Base checkpoint folder
@@ -172,8 +172,12 @@ if __name__ == "__main__":
         # Test on data
         test_loss, test_acc = test(test_loader, resnet_nn, criterion, device)
 
+        # Print train and test accuracy and train and test loss
+        print("train_acc=", train_acc, "test_acc =", test_acc)
+        print("train_loss=", round(train_loss.item(),2), "test_loss", round(test_loss.item(),2))
+
         # Obtain the new learning rate
-        if epoch < th:
+        if epoch < th-1:
             scheduler1.step()
             print(scheduler1.get_last_lr())
         else:
