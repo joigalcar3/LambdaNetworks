@@ -3,6 +3,7 @@ from torch import Tensor
 import torch.nn as nn
 from utils import load_state_dict_from_url
 from typing import Type, Any, Callable, Union, List, Optional
+import numpy as np
 
 from lambda_layer import LambdaLayer
 
@@ -111,7 +112,7 @@ class ResNet(nn.Module):
         self,
         block: Type[Bottleneck],
         layers: List[int],
-        num_classes: int = 1000,
+        num_classes: int = 10,
         zero_init_residual: bool = False,
         groups: int = 1,
         width_per_group: int = 64,
@@ -134,8 +135,14 @@ class ResNet(nn.Module):
 
         self.inplanes = 64
         self.dilation = 1
-        embedding = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
-        torch.nn.init.normal_(embedding, mean=0.0, std=1.0)
+
+        # embedding = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
+        # torch.nn.init.normal_(embedding, mean=0.0, std=1.0)
+
+        self.m = int(np.sqrt(context_size))
+        embedding = nn.Conv3d(1, self.qk_size, (1, self.m, self.m), padding=(0, self.m // 2, self.m // 2))
+        torch.nn.init.normal_(embedding.weight, mean=0.0, std=1.0)
+
         if replace_stride_with_dilation is None:
             # each element in the tuple indicates if we should replace
             # the 2x2 stride with a dilated convolution instead
@@ -185,7 +192,6 @@ class ResNet(nn.Module):
             self.dilation *= stride
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
-            # For the commented out part:
             # In order to maintain the same image shape, stride = 1
             # This is done such that the same embeddings can be used
             # stride = 1
@@ -193,13 +199,11 @@ class ResNet(nn.Module):
             #     conv1x1(self.inplanes, planes * block.expansion, stride),
             #     norm_layer(planes * block.expansion),
             # )
-            # downsample_residual is the same as the original downsample variable of resnet but changing dimensions d
             downsample_residual = nn.Sequential(
                 conv1x1(self.inplanes, planes * block.expansion, stride),
                 norm_layer(planes * block.expansion),
             )
             if stride != 1:
-                #downsample outpat is the same as downsample_residual but without changing dimensions d
                 downsample_output = nn.Sequential(
                     conv1x1(planes * block.expansion, planes * block.expansion, stride),
                     norm_layer(planes * block.expansion),
@@ -211,8 +215,11 @@ class ResNet(nn.Module):
         if stride != 1:
             self.input_size = int(self.input_size/stride**2)
             self.context_size = int(self.context_size / stride ** 2)
-            E = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
-            torch.nn.init.normal_(E, mean=0.0, std=1.0)
+            self.m = int(self.m/2)
+            # E = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
+            # torch.nn.init.normal_(E, mean=0.0, std=1.0)
+            E = nn.Conv3d(1, self.qk_size, (1, self.m, self.m), padding=(0, self.m // 2, self.m // 2))
+            torch.nn.init.normal_(E.weight, mean=0.0, std=1.0)
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
             layers.append(block(self.inplanes, planes, E, groups=self.groups,
