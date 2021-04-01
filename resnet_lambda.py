@@ -184,6 +184,7 @@ class ResNet(nn.Module):
             self.dilation *= stride
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
+            # For the commented out part:
             # In order to maintain the same image shape, stride = 1
             # This is done such that the same embeddings can be used
             # stride = 1
@@ -191,11 +192,13 @@ class ResNet(nn.Module):
             #     conv1x1(self.inplanes, planes * block.expansion, stride),
             #     norm_layer(planes * block.expansion),
             # )
+            # downsample_residual is the same as the original downsample variable of resnet but changing dimensions d
             downsample_residual = nn.Sequential(
                 conv1x1(self.inplanes, planes * block.expansion, stride),
                 norm_layer(planes * block.expansion),
             )
             if stride != 1:
+                #downsample outpat is the same as downsample_residual but without changing dimensions d
                 downsample_output = nn.Sequential(
                     conv1x1(planes * block.expansion, planes * block.expansion, stride),
                     norm_layer(planes * block.expansion),

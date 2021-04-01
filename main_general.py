@@ -58,7 +58,7 @@ if __name__ == "__main__":
     n_col_plot = 8             # Number of columns to include in the plot of CIFAR-10
     epochs = 90                # Number of epochs: suggested by Robert-Jan Bruintjes
     weight_decay = 1e-4        # Weight decay for the Adam
-    initial_lr = 0.01          # Initial learning rate
+    initial_lr = 0.32          # Initial learning rate
     th = 5                     # Threshold number of epochs to change scheduler
     model_type = 1             # Type of model: 0 = baseline; 1 = lambda
     resume = False             # Resume from the latest checkpoint
