@@ -7,7 +7,7 @@ class LambdaLayer(nn.Module):
      of the 3x3 conv layers by the lambda layers does not change the image size. Which in the case
       of ResNet50 is 8x8."""
 
-    def __init__(self, input_size, context_size, value_size, qk_size, output_size, heads):
+    def __init__(self, input_size, context_size, value_size, qk_size, output_size, heads, E):
         super(LambdaLayer, self).__init__()
 
         self.n = input_size
@@ -21,7 +21,8 @@ class LambdaLayer(nn.Module):
         self.toqueries = nn.Linear(self.d, self.k * self.h, bias=False)
         self.tokeys    = nn.Linear(self.d, self.k, bias=False)
         self.tovalues  = nn.Linear(self.d, self.v, bias=False)
-        self.E = nn.Parameter(torch.Tensor(self.n, self.m, self.k), requires_grad=True)  # n-m-k
+        # self.E = nn.Parameter(torch.Tensor(self.n, self.m, self.k), requires_grad=True)  # n-m-k
+        self.E = E    #n-m-k
 
         # Create batchnormalization layers
         self.bn_values = nn.BatchNorm1d(self.m)
@@ -37,7 +38,7 @@ class LambdaLayer(nn.Module):
         """
         Initialize network parameters.
         """
-        torch.nn.init.normal_(self.E, mean=0.0, std=1.0)
+        # torch.nn.init.normal_(self.E, mean=0.0, std=1.0)
         std_kv = 1/np.sqrt(self.d)
         std_q = 1/np.sqrt(self.d * self.k)
         torch.nn.init.normal_(self.toqueries.weight, mean=0.0, std=std_q)
@@ -50,6 +51,9 @@ class LambdaLayer(nn.Module):
         b, d, n1, n2 = x.size()     # b-d-n1-n2
         n = n1*n2
         x = torch.reshape(x, [b, n, d])
+
+        # Reshape the context
+        c = torch.reshape(c, [b, self.m, d])
 
         # Compute the keys
         keys = self.tokeys(c)       # b-m-k
@@ -81,5 +85,9 @@ class LambdaLayer(nn.Module):
 
         # Compute output
         output = torch.reshape(content_output + position_output, [b, n, d])   # b-n-d
+
+        # Reshape as an image
+        output = torch.transpose(output, 1, 2)   # b-d-n
+        output = torch.reshape(output, [b, d, n1, n2])   # b-d-n1-n2
 
         return output

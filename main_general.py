@@ -49,17 +49,18 @@ class LabelSmoothing(nn.Module):
 
 if __name__ == "__main__":
     #%% Input parameters
-    b_size = 128               # Batch size: Table 4 of the original paper
-    context_size = 23 * 23     # Context size: m
+    b_size = 100               # Batch size: Table 4 of the original paper
+    context_size = 8 * 8       # Context size: m
+    input_size = 8 * 8         # Input size: n
     qk_size = 16               # Key size: k
     heads = 4                  # Number of heads: h
     n_rows_plot = 8            # Number of rows to include in the plot of CIFAR-10
     n_col_plot = 8             # Number of columns to include in the plot of CIFAR-10
-    epochs = 90              # Number of epochs: suggested by Robert-Jan Bruintjes
+    epochs = 90                # Number of epochs: suggested by Robert-Jan Bruintjes
     weight_decay = 1e-4        # Weight decay for the Adam
     initial_lr = 0.01          # Initial learning rate
     th = 5                     # Threshold number of epochs to change scheduler
-    model_type = 0            # Type of model: 0 = baseline; 1 = lambda
+    model_type = 1             # Type of model: 0 = baseline; 1 = lambda
     resume = False             # Resume from the latest checkpoint
     smoothing = True           # switch which defines whether label smoothing should take place
     cp_dir = ".\Checkpoints"   # Base checkpoint folder
@@ -106,7 +107,7 @@ if __name__ == "__main__":
         from resnet_lambda import *
         resnet_nn = resnet50(pretrained=False, progress=True, num_classes=10, context_size=context_size,
                              qk_size=qk_size,
-                             heads=heads)
+                             heads=heads, input_size=input_size)
     else:
         from resnet import *
         resnet_nn = resnet50(pretrained=False, progress=True, num_classes=10)

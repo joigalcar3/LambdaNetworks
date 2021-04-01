@@ -46,6 +46,7 @@ class Bottleneck(nn.Module):
         self,
         inplanes: int,
         planes: int,
+        E: torch.FloatTensor,
         stride: int = 1,
         downsample: Optional[nn.Module] = None,
         groups: int = 1,
@@ -69,7 +70,7 @@ class Bottleneck(nn.Module):
         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv1x1(inplanes, width)
         self.bn1 = norm_layer(width)
-        self.conv2 = LambdaLayer(input_size, context_size, value_size, qk_size, output_size, heads)
+        self.conv2 = LambdaLayer(input_size, context_size, value_size, qk_size, output_size, heads, E)
         self.bn2 = norm_layer(width)
         self.conv3 = conv1x1(width, planes * self.expansion)
         self.bn3 = norm_layer(planes * self.expansion)
@@ -84,7 +85,7 @@ class Bottleneck(nn.Module):
         out = self.bn1(out)
         out = self.relu(out)
 
-        out = self.conv2(out)
+        out = self.conv2(out, out)
         out = self.bn2(out)
         out = self.relu(out)
 
@@ -115,6 +116,7 @@ class ResNet(nn.Module):
         context_size: int = 23 * 23,
         qk_size: int = 16,
         heads: int = 4,
+        input_size: int = 8 * 8
     ) -> None:
         super(ResNet, self).__init__()
         if norm_layer is None:
@@ -124,9 +126,12 @@ class ResNet(nn.Module):
         self.context_size = context_size
         self.qk_size = qk_size
         self.heads = heads
+        self.input_size = input_size
 
         self.inplanes = 64
         self.dilation = 1
+        self.E = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
+        torch.nn.init.normal_(self.E, mean=0.0, std=1.0)
         if replace_stride_with_dilation is None:
             # each element in the tuple indicates if we should replace
             # the 2x2 stride with a dilated convolution instead
@@ -174,20 +179,23 @@ class ResNet(nn.Module):
             self.dilation *= stride
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
+            # In order to maintain the same image shape, stride = 1
+            # This is done such that the same embeddings can be used
+            stride = 1
             downsample = nn.Sequential(
                 conv1x1(self.inplanes, planes * block.expansion, stride),
                 norm_layer(planes * block.expansion),
             )
 
         layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample, self.groups,
-                            self.base_width, norm_layer, self.context_size, self.qk_size, self.heads))
+        layers.append(block(self.inplanes, planes, self.E, stride, downsample, self.groups,
+                            self.base_width, norm_layer, self.context_size, self.qk_size, self.heads, self.input_size))
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
-            layers.append(block(self.inplanes, planes, groups=self.groups,
+            layers.append(block(self.inplanes, planes, self.E, groups=self.groups,
                                 base_width=self.base_width,
                                 norm_layer=norm_layer, context_size=self.context_size, qk_size=self.qk_size,
-                                heads=self.heads))
+                                heads=self.heads, input_size=self.input_size))
 
         return nn.Sequential(*layers)
 
