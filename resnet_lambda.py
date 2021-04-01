@@ -46,9 +46,10 @@ class Bottleneck(nn.Module):
         self,
         inplanes: int,
         planes: int,
-        E: torch.FloatTensor,
+        E: nn.Parameter,
         stride: int = 1,
-        downsample: Optional[nn.Module] = None,
+        downsample_residual: nn.Module = None,
+        downsample_output: nn.Module = None,
         groups: int = 1,
         base_width: int = 64,
         norm_layer: Optional[Callable[..., nn.Module]] = None,
@@ -75,7 +76,8 @@ class Bottleneck(nn.Module):
         self.conv3 = conv1x1(width, planes * self.expansion)
         self.bn3 = norm_layer(planes * self.expansion)
         self.relu = nn.ReLU(inplace=True)
-        self.downsample = downsample
+        self.downsample_residual = downsample_residual    # Downsampling for the residual connection
+        self.downsample_output = downsample_output     # Downsampling for the BottleNeck output
         self.stride = stride
 
     def forward(self, x: Tensor) -> Tensor:
@@ -92,8 +94,10 @@ class Bottleneck(nn.Module):
         out = self.conv3(out)
         out = self.bn3(out)
 
-        if self.downsample is not None:
-            identity = self.downsample(x)
+        if self.downsample_residual is not None:
+            identity = self.downsample_residual(x)
+            if self.downsample_output is not None:
+                out = self.downsample_output(out)
 
         out += identity
         out = self.relu(out)
@@ -130,8 +134,8 @@ class ResNet(nn.Module):
 
         self.inplanes = 64
         self.dilation = 1
-        self.E = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
-        torch.nn.init.normal_(self.E, mean=0.0, std=1.0)
+        embedding = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
+        torch.nn.init.normal_(embedding, mean=0.0, std=1.0)
         if replace_stride_with_dilation is None:
             # each element in the tuple indicates if we should replace
             # the 2x2 stride with a dilated convolution instead
@@ -146,13 +150,13 @@ class ResNet(nn.Module):
         self.bn1 = norm_layer(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
-                                       dilate=replace_stride_with_dilation[0])
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2,
-                                       dilate=replace_stride_with_dilation[1])
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
-                                       dilate=replace_stride_with_dilation[2])
+        self.layer1, embedding = self._make_layer(block, 64, layers[0], E=embedding)
+        self.layer2, embedding = self._make_layer(block, 128, layers[1], E=embedding, stride=2,
+                                                  dilate=replace_stride_with_dilation[0])
+        self.layer3, embedding = self._make_layer(block, 256, layers[2], E=embedding, stride=2,
+                                                  dilate=replace_stride_with_dilation[1])
+        self.layer4, embedding = self._make_layer(block, 512, layers[3], E=embedding, stride=2,
+                                                  dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
@@ -171,33 +175,49 @@ class ResNet(nn.Module):
                 if isinstance(m, Bottleneck):
                     nn.init.constant_(m.bn3.weight, 0)  # type: ignore[arg-type]
 
-    def _make_layer(self, block: Type[Bottleneck], planes: int, blocks: int,
+    def _make_layer(self, block: Type[Bottleneck], planes: int, blocks: int, E: nn.Parameter,
                     stride: int = 1, dilate: bool = False) -> nn.Sequential:
         norm_layer = self._norm_layer
-        downsample = None
+        downsample_residual = None
+        downsample_output = None
         if dilate:
             self.dilation *= stride
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
             # In order to maintain the same image shape, stride = 1
             # This is done such that the same embeddings can be used
-            stride = 1
-            downsample = nn.Sequential(
+            # stride = 1
+            # downsample = nn.Sequential(
+            #     conv1x1(self.inplanes, planes * block.expansion, stride),
+            #     norm_layer(planes * block.expansion),
+            # )
+            downsample_residual = nn.Sequential(
                 conv1x1(self.inplanes, planes * block.expansion, stride),
                 norm_layer(planes * block.expansion),
             )
+            if stride != 1:
+                downsample_output = nn.Sequential(
+                    conv1x1(planes * block.expansion, planes * block.expansion, stride),
+                    norm_layer(planes * block.expansion),
+                )
 
         layers = []
-        layers.append(block(self.inplanes, planes, self.E, stride, downsample, self.groups,
+        layers.append(block(self.inplanes, planes, E, stride, downsample_residual, downsample_output, self.groups,
                             self.base_width, norm_layer, self.context_size, self.qk_size, self.heads, self.input_size))
+        if stride != 1:
+            self.input_size = int(self.input_size/stride**2)
+            self.context_size = int(self.context_size / stride ** 2)
+            E = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
+            torch.nn.init.normal_(E, mean=0.0, std=1.0)
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
-            layers.append(block(self.inplanes, planes, self.E, groups=self.groups,
+            layers.append(block(self.inplanes, planes, E, groups=self.groups,
                                 base_width=self.base_width,
                                 norm_layer=norm_layer, context_size=self.context_size, qk_size=self.qk_size,
                                 heads=self.heads, input_size=self.input_size))
 
-        return nn.Sequential(*layers)
+
+        return nn.Sequential(*layers), E
 
     def _forward_impl(self, x: Tensor) -> Tensor:
         # See note [TorchScript super()]

@@ -49,7 +49,7 @@ class LabelSmoothing(nn.Module):
 
 if __name__ == "__main__":
     #%% Input parameters
-    b_size = 100               # Batch size: Table 4 of the original paper
+    b_size = 128               # Batch size: Table 4 of the original paper
     context_size = 8 * 8       # Context size: m
     input_size = 8 * 8         # Input size: n
     qk_size = 16               # Key size: k
