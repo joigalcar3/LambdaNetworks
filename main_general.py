@@ -49,7 +49,7 @@ class LabelSmoothing(nn.Module):
 
 if __name__ == "__main__":
     #%% Input parameters
-    b_size = 128               # Batch size: Table 4 of the original paper
+    b_size = 100               # Batch size: Table 4 of the original paper
     context_size = 8 * 8       # Context size: m
     input_size = 8 * 8         # Input size: n
     qk_size = 16               # Key size: k
@@ -73,6 +73,9 @@ if __name__ == "__main__":
     folder_checkpoint = os.path.join(cp_dir, model_name)   # Path for storing the model info
     if not os.path.exists(folder_checkpoint):
         os.makedirs(folder_checkpoint)
+
+    if not os.path.exists(".\logs"):   # Check whether the logs folder exists
+        os.makedirs(".\logs")
 
     #%% Define training and validation transforms
     train_transform = torchvision.transforms.Compose([
@@ -165,6 +168,9 @@ if __name__ == "__main__":
         else:
             print("=> no checkpoint found at '{}'".format(folder_checkpoint))
 
+    f_path = ".\logs\\" + current_time
+    f = open(f_path, "a")
+
     #%% Train the resnet
     for epoch in tqdm(range(max_epoch, epochs)):  # loop over the dataset multiple times
         # Train on data
@@ -174,16 +180,25 @@ if __name__ == "__main__":
         test_loss, test_acc = test(test_loader, resnet_nn, criterion, device)
 
         # Print train and test accuracy and train and test loss
-        print("train_acc=", train_acc, "test_acc =", test_acc)
-        print("train_loss=", round(train_loss.item(),2), "test_loss", round(test_loss.item(),2))
+        print("train_acc = ", train_acc, "test_acc = ", test_acc)
+        print("train_loss = ", round(train_loss.item(), 2), "test_loss = ", round(test_loss.item(),2))
+
+        # Store information in logs
+        f.write("epoch = " + str(epoch) + "\n")
+        f.write("\tlearning rate = " + str(optimizer.param_groups[0]['lr']) + "\n")
+        f.write("\ttrain acc = " + str(train_acc) + " --- test acc = " + str(test_acc) + "\n")
+        f.write("\ttrain loss = " + str(round(train_loss.item(), 2)) + " --- test loss = " + str(round(test_loss.item(),
+                                                                                                       2)) + "\n")
 
         # Obtain the new learning rate
         if epoch < th-1:
             scheduler1.step()
             print(scheduler1.get_last_lr())
+            f.write("lr = " + str(scheduler1.get_last_lr()) + "\n")
         else:
             scheduler2.step()
             print(scheduler2.get_last_lr())
+            f.write("lr = " + str(scheduler2.get_last_lr()) + "\n")
 
         # Save checkpoint
         if epoch % 5 == 0:
@@ -205,6 +220,6 @@ if __name__ == "__main__":
     print('Finished Training')
     writer.flush()
     writer.close()
-
+    f.close()
 # To be run on the terminal: tensorboard --logdir=runs
 # To clean tensorboard: !rm -r runs

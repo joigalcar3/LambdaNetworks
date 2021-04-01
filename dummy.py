@@ -7,9 +7,10 @@ class Dummy:
         self.E = E
 
 def mama(a):
-    # b = a+1
+    b = a+1
     print("a=",id(a))
-    return [a]
+    print("b=", id(b))
+    return a, b
 
 
 if __name__ == '__main__':
@@ -23,8 +24,9 @@ if __name__ == '__main__':
 
     number = 4
     print("number=", id(number))
-    t = mama(number)
-    print("t=", id(t))
+    t1, t2 = mama(number)
+    print("t1=", id(t1))
+    print("t2=", id(t2))
     number = 6
-    print("number2=",id(number))
-    print(t)
+    print("number2=", id(number))
+    print(t1, t2)
