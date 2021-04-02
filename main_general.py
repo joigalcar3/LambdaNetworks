@@ -14,6 +14,7 @@ from torchsummary import summary
 from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 import socket
 from datetime import datetime
@@ -55,7 +56,7 @@ class LabelSmoothing(nn.Module):
 if __name__ == "__main__":
     #%% Input parameters
     b_size = 100               # Batch size: Table 4 of the original paper
-    context_size = 8 * 8       # Context size: m
+    context_size = 7 * 7       # Context size: m
     input_size = 8 * 8         # Input size: n
     qk_size = 16               # Key size: k
     heads = 4                  # Number of heads: h
@@ -177,12 +178,22 @@ if __name__ == "__main__":
     f = open(f_path, "a")
 
     #%% Train the resnet
+    total_train_time = 0
+    total_test_time = 0
     for epoch in tqdm(range(max_epoch, epochs)):  # loop over the dataset multiple times
         # Train on data
+        start_train = time.time()
         train_loss, train_acc = train(train_loader, resnet_nn, optimizer, criterion, device, label_smoothing, smoothing)
+        end_train = time.time()
+        elapsed_train = end_train-start_train
+        total_train_time += total_train_time
 
         # Test on data
+        start_test = time.time()
         test_loss, test_acc = test(test_loader, resnet_nn, criterion, device)
+        end_test = time.time()
+        elapsed_test = end_test - start_test
+        total_test_time += total_test_time
 
         # Print train and test accuracy and train and test loss
         print("train_acc = ", train_acc, "test_acc = ", test_acc)
@@ -192,8 +203,12 @@ if __name__ == "__main__":
         f.write("epoch = " + str(epoch) + "\n")
         f.write("\tlearning rate = " + str(optimizer.param_groups[0]['lr']) + "\n")
         f.write("\ttrain acc = " + str(train_acc) + " --- test acc = " + str(test_acc) + "\n")
+        f.write("\ttrain epoch time = " + str(elapsed_train) + " s\n")
         f.write("\ttrain loss = " + str(round(train_loss.item(), 2)) + " --- test loss = " + str(round(test_loss.item(),
                                                                                                        2)) + "\n")
+        f.write("\ttest epoch time = " + str(elapsed_test) + " s\n")
+        f.write("\ttotal time train = " + str(total_train_time) + " s\n")
+        f.write("\ttotal time test = " + str(total_test_time) + " s\n")
 
         # Obtain the new learning rate
         if epoch < th-1:

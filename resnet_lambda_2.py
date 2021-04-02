@@ -5,7 +5,7 @@ from utils import load_state_dict_from_url
 from typing import Type, Any, Callable, Union, List, Optional
 import numpy as np
 
-from lambda_layer import LambdaLayer
+from lambda_layer_2 import LambdaLayer
 
 
 __all__ = ['ResNet', 'resnet50', 'resnet101',
@@ -88,7 +88,7 @@ class Bottleneck(nn.Module):
         out = self.bn1(out)
         out = self.relu(out)
 
-        out = self.conv2(out, out)
+        out = self.conv2(out)
         out = self.bn2(out)
         out = self.relu(out)
 
@@ -140,7 +140,7 @@ class ResNet(nn.Module):
         # torch.nn.init.normal_(embedding, mean=0.0, std=1.0)
 
         self.m = int(np.sqrt(context_size))
-        embedding = nn.Conv3d(1, self.qk_size, (1, self.m, self.m), padding=(0, self.m // 2, self.m // 2))
+        embedding = nn.Conv3d(1, self.qk_size, (1, self.m, self.m), padding=(0, self.m // 2, self.m // 2), bias = False)
         torch.nn.init.normal_(embedding.weight, mean=0.0, std=1.0)
 
         if replace_stride_with_dilation is None:
@@ -215,10 +215,10 @@ class ResNet(nn.Module):
         if stride != 1:
             self.input_size = int(self.input_size/stride**2)
             self.context_size = int(self.context_size / stride ** 2)
-            self.m = int(self.m/2)
+            self.m = max(int(self.m/stride), 1)
             # E = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
             # torch.nn.init.normal_(E, mean=0.0, std=1.0)
-            E = nn.Conv3d(1, self.qk_size, (1, self.m, self.m), padding=(0, self.m // 2, self.m // 2))
+            E = nn.Conv3d(1, self.qk_size, (1, self.m, self.m), padding=(0, self.m // 2, self.m // 2), bias=False)
             torch.nn.init.normal_(E.weight, mean=0.0, std=1.0)
         self.inplanes = planes * block.expansion
         for _ in range(1, blocks):
