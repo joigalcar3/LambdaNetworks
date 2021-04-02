@@ -55,8 +55,8 @@ class LabelSmoothing(nn.Module):
 
 if __name__ == "__main__":
     #%% Input parameters
-    b_size = 100               # Batch size: Table 4 of the original paper
-    context_size = 7 * 7       # Context size: m
+    b_size = 128               # Batch size: Table 4 of the original paper
+    context_size = 8 * 8       # Context size: m
     input_size = 8 * 8         # Input size: n
     qk_size = 16               # Key size: k
     heads = 4                  # Number of heads: h
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     n_col_plot = 8             # Number of columns to include in the plot of CIFAR-10
     epochs = 90                # Number of epochs: suggested by Robert-Jan Bruintjes and the LambdaNetworks paper
     weight_decay = 1e-4        # Weight decay for the Adam
-    initial_lr = 0.32          # Initial learning rate
+    initial_lr = 0.001          # Initial learning rate
     th = 5                     # Threshold number of epochs to change scheduler
     model_type = 1             # Type of model: 0 = baseline; 1 = lambda
     resume = False             # Resume from the latest checkpoint
