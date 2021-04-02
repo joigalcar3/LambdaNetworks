@@ -186,14 +186,14 @@ if __name__ == "__main__":
         train_loss, train_acc = train(train_loader, resnet_nn, optimizer, criterion, device, label_smoothing, smoothing)
         end_train = time.time()
         elapsed_train = end_train-start_train
-        total_train_time += total_train_time
+        total_train_time += elapsed_train
 
         # Test on data
         start_test = time.time()
         test_loss, test_acc = test(test_loader, resnet_nn, criterion, device)
         end_test = time.time()
         elapsed_test = end_test - start_test
-        total_test_time += total_test_time
+        total_test_time += elapsed_test
 
         # Print train and test accuracy and train and test loss
         print("train_acc = ", train_acc, "test_acc = ", test_acc)

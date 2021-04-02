@@ -10,7 +10,7 @@ class LambdaLayer(nn.Module):
     def __init__(self, input_size, context_size, value_size, qk_size, output_size, heads, E):
         super(LambdaLayer, self).__init__()
 
-        self.n = input_size
+        # self.n = input_size
         self.m = context_size
         self.d = output_size
         self.k = qk_size
@@ -67,9 +67,6 @@ class LambdaLayer(nn.Module):
         queries = torch.reshape(self.toqueries(x), [b, n, self.k, self.h])  # b-n-k-h
         queries = torch.transpose(queries, 1, 2)  # b-k-n-h
         queries = self.bn_queries(queries)  # b-k-n-h
-        queries = torch.transpose(queries, 1, 2)  # b-n-k-h
-        queries = torch.transpose(queries, 2, 3)  # b-n-h-k
-        queries = torch.transpose(queries, 1, 2)   # b-h-n-k
 
         # Compute lambdac
         content_lambda = torch.einsum('bmk, bmv->bkv', softmax_keys, values)    # b-k-v
@@ -78,10 +75,10 @@ class LambdaLayer(nn.Module):
         position_lambdas = torch.einsum('nmk, bmv->bnkv', self.E, values)       # b-n-k-v
 
         # Compute content output
-        content_output = torch.einsum('bhnk, bkv->bnhv', queries, content_lambda)   # b-n-h-v
+        content_output = torch.einsum('bknh, bkv->bnhv', queries, content_lambda)   # b-n-h-v
 
         # Compute position output
-        position_output = torch.einsum('bhnk, bnkv->bnhv', queries, position_lambdas)   # b-n-h-v
+        position_output = torch.einsum('bknh, bnkv->bnhv', queries, position_lambdas)   # b-n-h-v
 
         # Compute output
         output = torch.reshape(content_output + position_output, [b, n, d])   # b-n-d
