@@ -127,7 +127,7 @@ if __name__ == "__main__":
 
     # Create a writer to write to Tensorboard
     current_time = datetime.now().strftime('%b%d_%H-%M-%S')
-    log_dir = os.path.join('runs', model_name, current_time + '_' + socket.gethostname())
+    log_dir = os.path.join('runs', model_name, current_time + '_' + str(initial_lr) + '_' + socket.gethostname())
     writer = SummaryWriter(log_dir)
 
     # Check if GPU available
@@ -174,7 +174,7 @@ if __name__ == "__main__":
         else:
             print("=> no checkpoint found at '{}'".format(folder_checkpoint))
 
-    f_path = ".\\logs\\" + model_name + "\\" + current_time + '_' + socket.gethostname()
+    f_path = ".\\logs\\" + model_name + "\\" + current_time + '_' + socket.gethostname() + ".txt"
     f = open(f_path, "a")
 
     #%% Train the resnet
@@ -214,11 +214,9 @@ if __name__ == "__main__":
         if epoch < th-1:
             scheduler1.step()
             print(scheduler1.get_last_lr())
-            f.write("lr = " + str(scheduler1.get_last_lr()) + "\n")
         else:
             scheduler2.step()
             print(scheduler2.get_last_lr())
-            f.write("lr = " + str(scheduler2.get_last_lr()) + "\n")
 
         # Save checkpoint
         if epoch % 5 == 0:
