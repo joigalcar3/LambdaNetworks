@@ -127,7 +127,7 @@ if __name__ == "__main__":
 
     # Create a writer to write to Tensorboard
     current_time = datetime.now().strftime('%b%d_%H-%M-%S')
-    log_dir = os.path.join('runs', model_name, current_time + '_' + str(initial_lr) + '_' + socket.gethostname())
+    log_dir = os.path.join('runs', model_name, current_time + '_lr' + str(initial_lr) + '_' + socket.gethostname())
     writer = SummaryWriter(log_dir)
 
     # Check if GPU available
@@ -174,7 +174,8 @@ if __name__ == "__main__":
         else:
             print("=> no checkpoint found at '{}'".format(folder_checkpoint))
 
-    f_path = ".\\logs\\" + model_name + "\\" + current_time + '_' + socket.gethostname() + ".txt"
+    f_path = ".\\logs\\" + model_name + "\\" +\
+             current_time + '_lr' + str(initial_lr) + '_' + socket.gethostname() + ".txt"
     f = open(f_path, "a")
 
     #%% Train the resnet
@@ -239,5 +240,14 @@ if __name__ == "__main__":
     writer.flush()
     writer.close()
     f.close()
+
+
+# Useful Tensorboard and Colab commands
 # To be run on the terminal: tensorboard --logdir=runs
 # To clean tensorboard: !rm -r runs
+# !git clone https://github.com/joigalcar3/LambdaNetworks
+# !python LambdaNetworks/main_general.py
+
+# from google.colab import files
+# !zip -r runs/Lambda/Apr02_11-13-58_21686eb8b94b.zip runs/Lambda/Apr02_11-13-58_21686eb8b94b
+# files.download('./runs/Lambda/Apr02_11-13-58_21686eb8b94b.zip')
