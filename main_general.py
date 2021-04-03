@@ -64,7 +64,7 @@ if __name__ == "__main__":
     n_col_plot = 8             # Number of columns to include in the plot of CIFAR-10
     epochs = 90                # Number of epochs: suggested by Robert-Jan Bruintjes and the LambdaNetworks paper
     weight_decay = 1e-4        # Weight decay for the Adam
-    initial_lr = 0.001          # Initial learning rate
+    initial_lr = 0.005          # Initial learning rate
     th = 5                     # Threshold number of epochs to change scheduler
     model_type = 1             # Type of model: 0 = baseline; 1 = lambda
     resume = False             # Resume from the latest checkpoint
@@ -85,6 +85,10 @@ if __name__ == "__main__":
         os.makedirs(logs_dir)
 
     #%% Define training and validation transforms
+    # train_transform = torchvision.transforms.Compose([
+    #     torchvision.transforms.RandomCrop(32, padding=4),
+    #     torchvision.transforms.RandomHorizontalFlip(p=0.5),
+    #     torchvision.transforms.ToTensor()])
     train_transform = torchvision.transforms.Compose([
         torchvision.transforms.RandomCrop(32, padding=4),
         torchvision.transforms.RandomHorizontalFlip(p=0.5),
@@ -94,6 +98,8 @@ if __name__ == "__main__":
         torchvision.transforms.RandomCrop(32, padding=4),
         torchvision.transforms.RandomHorizontalFlip(p=0.5),
         torchvision.transforms.ToTensor()])
+    # valid_transform = torchvision.transforms.Compose([
+    #     torchvision.transforms.ToTensor()])
     valid_transform = torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
