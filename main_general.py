@@ -88,8 +88,15 @@ if __name__ == "__main__":
     train_transform = torchvision.transforms.Compose([
         torchvision.transforms.RandomCrop(32, padding=4),
         torchvision.transforms.RandomHorizontalFlip(p=0.5),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
+    plot_transform = torchvision.transforms.Compose([
+        torchvision.transforms.RandomCrop(32, padding=4),
+        torchvision.transforms.RandomHorizontalFlip(p=0.5),
         torchvision.transforms.ToTensor()])
-    valid_transform = torchvision.transforms.ToTensor()
+    valid_transform = torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
 
     # Preparing the dataset
     download_train = False if os.path.exists(".\\CIFAR_10_train") else True
@@ -97,13 +104,16 @@ if __name__ == "__main__":
 
     cifar10_train = torchvision.datasets.CIFAR10(root=".\\CIFAR_10_train", train=True, download=download_train,
                                                  transform=train_transform)
+    cifar10_plot = torchvision.datasets.CIFAR10(root=".\\CIFAR_10_train", train=True, download=download_train,
+                                                 transform=plot_transform)
     cifar10_test = torchvision.datasets.CIFAR10(root=".\\CIFAR_10_test", train=False, download=download_test,
                                                 transform=valid_transform)
 
     train_loader = DataLoader(cifar10_train, batch_size=b_size, shuffle=True)
+    plot_loader = DataLoader(cifar10_plot, batch_size=b_size, shuffle=True)
     test_loader = DataLoader(cifar10_test, batch_size=b_size, shuffle=True)
 
-    input_lst, label = next(iter(train_loader))
+    input_lst, label = next(iter(plot_loader))
 
     # Plot a random group of images from the training set
     plt.figure()

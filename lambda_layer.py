@@ -22,7 +22,7 @@ class LambdaLayer(nn.Module):
         self.tokeys    = nn.Linear(self.d, self.k, bias=False)
         self.tovalues  = nn.Linear(self.d, self.v, bias=False)
         # self.E = nn.Parameter(torch.Tensor(self.n, self.m, self.k), requires_grad=True)  # n-m-k
-        self.E = E    #n-m-k
+        self.E = E    # n-m-k
 
         # Create batchnormalization layers
         self.bn_values = nn.BatchNorm1d(self.m)
@@ -75,16 +75,16 @@ class LambdaLayer(nn.Module):
         position_lambdas = torch.einsum('nmk, bmv->bnkv', self.E, values)       # b-n-k-v
 
         # Compute content output
-        content_output = torch.einsum('bknh, bkv->bnhv', queries, content_lambda)   # b-n-h-v
+        content_output = torch.einsum('bknh, bkv->bhvn', queries, content_lambda)   # b-h-v-n
 
         # Compute position output
-        position_output = torch.einsum('bknh, bnkv->bnhv', queries, position_lambdas)   # b-n-h-v
+        position_output = torch.einsum('bknh, bnkv->bhvn', queries, position_lambdas)   # b-h-v-n
 
         # Compute output
-        output = torch.reshape(content_output + position_output, [b, n, d])   # b-n-d
+        output = torch.reshape(content_output + position_output, [b, d, n])   # b-d-n
 
         # Reshape as an image
-        output = torch.transpose(output, 1, 2)   # b-d-n
+        # output = torch.transpose(output, 1, 2)   # b-d-n
         output = torch.reshape(output, [b, d, n1, n2])   # b-d-n1-n2
 
         return output
