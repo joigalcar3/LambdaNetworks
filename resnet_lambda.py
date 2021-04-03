@@ -88,6 +88,8 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
 
         out = self.conv2(out, out)
+        if self.downsample_output is not None:
+            out = self.downsample_output(out)
         out = self.bn2(out)
         out = self.relu(out)
 
@@ -96,8 +98,8 @@ class Bottleneck(nn.Module):
 
         if self.downsample_residual is not None:
             identity = self.downsample_residual(x)
-            if self.downsample_output is not None:
-                out = self.downsample_output(out)
+            # if self.downsample_output is not None:
+            #     out = self.downsample_output(out)
 
         out += identity
         out = self.relu(out)
@@ -200,10 +202,11 @@ class ResNet(nn.Module):
             )
             if stride != 1:
                 #downsample outpat is the same as downsample_residual but without changing dimensions d
-                downsample_output = nn.Sequential(
-                    conv1x1(planes * block.expansion, planes * block.expansion, stride),
-                    norm_layer(planes * block.expansion),
-                )
+                downsample_output = nn.AvgPool2d(kernel_size=(3, 3), stride=stride, padding=(1, 1))
+                # downsample_output = nn.Sequential(
+                #     conv1x1(planes * block.expansion, planes * block.expansion, stride),
+                #     norm_layer(planes * block.expansion),
+                # )
 
         layers = []
         layers.append(block(self.inplanes, planes, E, stride, downsample_residual, downsample_output, self.groups,

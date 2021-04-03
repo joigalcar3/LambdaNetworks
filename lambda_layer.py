@@ -50,7 +50,7 @@ class LambdaLayer(nn.Module):
         # Obtain the batch_size
         b, d, n1, n2 = x.size()     # b-d-n1-n2
         n = n1*n2
-        x = torch.reshape(x, [b, n, d])
+        x = torch.reshape(x, [b, n, d])    # b-n-d
 
         # Reshape the context
         c = torch.reshape(c, [b, self.m, d])
