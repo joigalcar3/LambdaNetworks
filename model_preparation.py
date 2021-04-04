@@ -38,7 +38,7 @@ def model_preparation(args, input_lst, model_name):
     if args.model_type:
         resnet_nn = resnet50_lambda(pretrained=False, progress=True, num_classes=10, context_size=args.context_size,
                                     qk_size=args.qk_size, heads=args.heads, input_size=args.input_size,
-                                    zero_init_residual=True)
+                                    zero_init_residual=args.BN_gamma)
     else:
         resnet_nn = resnet50(pretrained=False, progress=True, num_classes=10, zero_init_residual=True)
 

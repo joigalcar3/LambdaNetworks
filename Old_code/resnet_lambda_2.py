@@ -2,10 +2,10 @@ import torch
 from torch import Tensor
 import torch.nn as nn
 from utils import load_state_dict_from_url
-from typing import Type, Any, Callable, Union, List, Optional
+from typing import Type, Any, Callable, List, Optional
 import numpy as np
 
-from lambda_layer_2 import LambdaLayer
+from Old_code.lambda_layer_2 import LambdaLayer
 
 
 __all__ = ['ResNet', 'resnet50', 'resnet101',

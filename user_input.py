@@ -26,6 +26,8 @@ def load_user_input():
     parser.add_argument('--resume', type=bool, default=False, help='Resume from the latest checkpoint')
     parser.add_argument('--smoothing', type=bool, default=True,
                         help='Switch which defines whether label smoothing should take place')
+    parser.add_argument('--BN_gamma', type=bool, default=True,
+                        help='Initialisation value of the gamma parameter of the last BN layer')
     parser.add_argument('--cp_dir', type=str, default=".\\Checkpoints", help='Base checkpoint folder')
 
     return parser.parse_args()
