@@ -1,0 +1,223 @@
+epoch = 0
+	learning rate = 0.005
+	train acc = 13.738 --- test acc = 16.23
+	train epoch time = 122.98026919364929 s
+	train loss = 2.93 --- test loss = 2.4
+	test epoch time = 9.565543413162231 s
+	total time train = 122.98026919364929 s
+	total time test = 9.565543413162231 s
+epoch = 1
+	learning rate = 0.01
+	train acc = 19.902 --- test acc = 24.87
+	train epoch time = 122.65294361114502 s
+	train loss = 2.51 --- test loss = 2.22
+	test epoch time = 10.180010557174683 s
+	total time train = 245.6332128047943 s
+	total time test = 19.745553970336914 s
+epoch = 2
+	learning rate = 0.015
+	train acc = 24.442 --- test acc = 28.35
+	train epoch time = 124.00384879112244 s
+	train loss = 2.12 --- test loss = 1.96
+	test epoch time = 10.780343532562256 s
+	total time train = 369.63706159591675 s
+	total time test = 30.52589750289917 s
+epoch = 3
+	learning rate = 0.02
+	train acc = 29.464 --- test acc = 33.44
+	train epoch time = 130.0124955177307 s
+	train loss = 1.98 --- test loss = 1.8
+	test epoch time = 9.926186323165894 s
+	total time train = 499.64955711364746 s
+	total time test = 40.45208382606506 s
+epoch = 4
+	learning rate = 0.025
+	train acc = 33.492 --- test acc = 36.44
+	train epoch time = 127.68213605880737 s
+	train loss = 1.9 --- test loss = 1.73
+	test epoch time = 11.330308198928833 s
+	total time train = 627.3316931724548 s
+	total time test = 51.7823920249939 s
+epoch = 5
+	learning rate = 0.02499146325178779
+	train acc = 36.066 --- test acc = 38.88
+	train epoch time = 127.51486301422119 s
+	train loss = 1.85 --- test loss = 1.68
+	test epoch time = 10.67239236831665 s
+	total time train = 754.846556186676 s
+	total time test = 62.45478439331055 s
+epoch = 6
+	learning rate = 0.024965864667322354
+	train acc = 38.05 --- test acc = 40.3
+	train epoch time = 126.05911302566528 s
+	train loss = 1.81 --- test loss = 1.64
+	test epoch time = 10.72078275680542 s
+	total time train = 880.9056692123413 s
+	total time test = 73.17556715011597 s
+epoch = 7
+	learning rate = 0.024923239211190922
+	train acc = 39.718 --- test acc = 42.11
+	train epoch time = 130.07437419891357 s
+	train loss = 1.78 --- test loss = 1.62
+	test epoch time = 11.138333082199097 s
+	total time train = 1010.9800434112549 s
+	total time test = 84.31390023231506 s
+epoch = 8
+	learning rate = 0.02486364510463933
+	train acc = 41.446 --- test acc = 43.27
+	train epoch time = 132.52166175842285 s
+	train loss = 1.75 --- test loss = 1.59
+	test epoch time = 11.475725889205933 s
+	total time train = 1143.5017051696777 s
+	total time test = 95.789626121521 s
+epoch = 9
+	learning rate = 0.02478716374604878
+	train acc = 43.172 --- test acc = 44.8
+	train epoch time = 125.93923544883728 s
+	train loss = 1.73 --- test loss = 1.54
+	test epoch time = 10.468921899795532 s
+	total time train = 1269.440940618515 s
+	total time test = 106.25854802131653 s
+epoch = 10
+	learning rate = 0.024693899599755462
+	train acc = 44.688 --- test acc = 46.5
+	train epoch time = 126.16949605941772 s
+	train loss = 1.69 --- test loss = 1.51
+	test epoch time = 10.616634368896484 s
+	total time train = 1395.6104366779327 s
+	total time test = 116.87518239021301 s
+epoch = 11
+	learning rate = 0.02458398005336485
+	train acc = 45.91 --- test acc = 48.11
+	train epoch time = 130.80626773834229 s
+	train loss = 1.67 --- test loss = 1.46
+	test epoch time = 11.364379405975342 s
+	total time train = 1526.416704416275 s
+	total time test = 128.23956179618835 s
+epoch = 12
+	learning rate = 0.024457555243755515
+	train acc = 47.4 --- test acc = 50.04
+	train epoch time = 128.74322819709778 s
+	train loss = 1.64 --- test loss = 1.43
+	test epoch time = 11.730902194976807 s
+	total time train = 1655.1599326133728 s
+	total time test = 139.97046399116516 s
+epoch = 13
+	learning rate = 0.02431479785201025
+	train acc = 48.448 --- test acc = 51.23
+	train epoch time = 132.49097204208374 s
+	train loss = 1.62 --- test loss = 1.41
+	test epoch time = 10.93925142288208 s
+	total time train = 1787.6509046554565 s
+	total time test = 150.90971541404724 s
+epoch = 14
+	learning rate = 0.024155902867554452
+	train acc = 49.682 --- test acc = 51.89
+	train epoch time = 125.6629011631012 s
+	train loss = 1.59 --- test loss = 1.38
+	test epoch time = 10.110748291015625 s
+	total time train = 1913.3138058185577 s
+	total time test = 161.02046370506287 s
+epoch = 15
+	learning rate = 0.023981087321824045
+	train acc = 50.914 --- test acc = 52.07
+	train epoch time = 135.3814091682434 s
+	train loss = 1.57 --- test loss = 1.38
+	test epoch time = 11.556115865707397 s
+	total time train = 2048.695214986801 s
+	total time test = 172.57657957077026 s
+epoch = 16
+	learning rate = 0.023790589991826618
+	train acc = 51.856 --- test acc = 52.75
+	train epoch time = 137.3182623386383 s
+	train loss = 1.55 --- test loss = 1.36
+	test epoch time = 11.508514642715454 s
+	total time train = 2186.0134773254395 s
+	total time test = 184.08509421348572 s
+epoch = 17
+	learning rate = 0.023584671074000783
+	train acc = 52.676 --- test acc = 54.79
+	train epoch time = 128.62273955345154 s
+	train loss = 1.53 --- test loss = 1.31
+	test epoch time = 11.326289892196655 s
+	total time train = 2314.636216878891 s
+	total time test = 195.41138410568237 s
+epoch = 18
+	learning rate = 0.023363611828819113
+	train acc = 54.042 --- test acc = 55.48
+	train epoch time = 132.56090664863586 s
+	train loss = 1.51 --- test loss = 1.29
+	test epoch time = 12.718794345855713 s
+	total time train = 2447.197123527527 s
+	total time test = 208.1301784515381 s
+epoch = 19
+	learning rate = 0.02312771419662019
+	train acc = 54.776 --- test acc = 56.17
+	train epoch time = 133.33369159698486 s
+	train loss = 1.49 --- test loss = 1.26
+	test epoch time = 10.509984254837036 s
+	total time train = 2580.5308151245117 s
+	total time test = 218.64016270637512 s
+epoch = 20
+	learning rate = 0.022877300385194393
+	train acc = 55.524 --- test acc = 57.36
+	train epoch time = 129.25797724723816 s
+	train loss = 1.48 --- test loss = 1.24
+	test epoch time = 10.19048023223877 s
+	total time train = 2709.78879237175 s
+	total time test = 228.8306429386139 s
+epoch = 21
+	learning rate = 0.022612712429686856
+	train acc = 56.186 --- test acc = 57.18
+	train epoch time = 129.11004853248596 s
+	train loss = 1.46 --- test loss = 1.23
+	test epoch time = 11.03393268585205 s
+	total time train = 2838.898840904236 s
+	total time test = 239.86457562446594 s
+epoch = 22
+	learning rate = 0.022334311725418558
+	train acc = 56.87 --- test acc = 57.24
+	train epoch time = 133.69045329093933 s
+	train loss = 1.44 --- test loss = 1.24
+	test epoch time = 10.848713636398315 s
+	total time train = 2972.589294195175 s
+	total time test = 250.71328926086426 s
+epoch = 23
+	learning rate = 0.0220424785342638
+	train acc = 57.554 --- test acc = 58.51
+	train epoch time = 138.51950907707214 s
+	train loss = 1.44 --- test loss = 1.19
+	test epoch time = 11.94231653213501 s
+	total time train = 3111.1088032722473 s
+	total time test = 262.65560579299927 s
+epoch = 24
+	learning rate = 0.021737611465258252
+	train acc = 58.426 --- test acc = 59.52
+	train epoch time = 127.18562984466553 s
+	train loss = 1.42 --- test loss = 1.2
+	test epoch time = 11.242416858673096 s
+	total time train = 3238.294433116913 s
+	total time test = 273.89802265167236 s
+epoch = 25
+	learning rate = 0.02142012693014692
+	train acc = 59.122 --- test acc = 59.3
+	train epoch time = 126.71594643592834 s
+	train loss = 1.4 --- test loss = 1.19
+	test epoch time = 10.791092872619629 s
+	total time train = 3365.010379552841 s
+	total time test = 284.689115524292 s
+epoch = 26
+	learning rate = 0.0210904585746158
+	train acc = 59.392 --- test acc = 60.99
+	train epoch time = 130.37695336341858 s
+	train loss = 1.39 --- test loss = 1.16
+	test epoch time = 10.584108352661133 s
+	total time train = 3495.3873329162598 s
+	total time test = 295.2732238769531 s
+epoch = 27
+	learning rate = 0.020749056685984053
+	train acc = 60.128 --- test acc = 59.49
+	train epoch time = 126.3832197189331 s
+	train loss = 1.38 --- test loss = 1.17
+	test epoch time = 10.135362386703491 s
+	total time train = 3621.770552635193 s

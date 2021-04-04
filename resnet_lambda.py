@@ -6,10 +6,10 @@ from typing import Type, Any, Callable, Union, List, Optional
 
 from lambda_layer import LambdaLayer
 
-
-__all__ = ['ResNet', 'resnet50', 'resnet101',
-           'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
-           'wide_resnet50_2', 'wide_resnet101_2']
+# Code from https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
+__all__ = ['ResNet', 'resnet50_lambda', 'resnet101_lambda',
+           'resnet152_lambda', 'resnext50_32x4d_lambda', 'resnext101_32x8d_lambda',
+           'wide_resnet50_2_lambda', 'wide_resnet101_2_lambda']
 
 
 model_urls = {
@@ -56,7 +56,6 @@ class Bottleneck(nn.Module):
         context_size: int = 23 * 23,
         qk_size: int = 16,
         heads: int = 4,
-        input_size: int = 8 * 8
     ) -> None:
 
         super(Bottleneck, self).__init__()
@@ -70,12 +69,15 @@ class Bottleneck(nn.Module):
 
         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
         self.conv1 = conv1x1(inplanes, width)
-        self.bn1 = norm_layer(width)
-        self.conv2 = LambdaLayer(input_size, context_size, value_size, qk_size, output_size, heads, E)
-        self.bn2 = norm_layer(width)
+        self.bn1 = norm_layer(width, momentum=0.9999)
+
+        self.conv2 = LambdaLayer(context_size, value_size, qk_size, output_size, heads, E)
+        self.bn2 = norm_layer(width, momentum=0.9999)
+
         self.conv3 = conv1x1(width, planes * self.expansion)
-        self.bn3 = norm_layer(planes * self.expansion)
+        self.bn3 = norm_layer(planes * self.expansion, momentum=0.9999)
         self.relu = nn.ReLU(inplace=True)
+
         self.downsample_residual = downsample_residual    # Downsampling for the residual connection
         self.downsample_output = downsample_output     # Downsampling for the BottleNeck output
         self.stride = stride
@@ -87,6 +89,7 @@ class Bottleneck(nn.Module):
         out = self.bn1(out)
         out = self.relu(out)
 
+        # In the case that the stride is not equal to 1, downsize the LambdaLayer output
         out = self.conv2(out, out)
         if self.downsample_output is not None:
             out = self.downsample_output(out)
@@ -96,10 +99,9 @@ class Bottleneck(nn.Module):
         out = self.conv3(out)
         out = self.bn3(out)
 
+        # Adapt the residual to the LambdaLayer corrected output dimensions
         if self.downsample_residual is not None:
             identity = self.downsample_residual(x)
-            # if self.downsample_output is not None:
-            #     out = self.downsample_output(out)
 
         out += identity
         out = self.relu(out)
@@ -129,15 +131,18 @@ class ResNet(nn.Module):
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
 
-        self.context_size = context_size
-        self.qk_size = qk_size
-        self.heads = heads
-        self.input_size = input_size
+        self.context_size = context_size   # m
+        self.qk_size = qk_size             # k
+        self.heads = heads                 # h
+        self.input_size = input_size       # n
 
-        self.inplanes = 64
+        self.inplanes = 64                 # d
         self.dilation = 1
+
+        # Initialisation of the embedding matrices
         embedding = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
         torch.nn.init.normal_(embedding, mean=0.0, std=1.0)
+
         if replace_stride_with_dilation is None:
             # each element in the tuple indicates if we should replace
             # the 2x2 stride with a dilated convolution instead
@@ -149,7 +154,7 @@ class ResNet(nn.Module):
         self.base_width = width_per_group
         self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
                                bias=False)
-        self.bn1 = norm_layer(self.inplanes)
+        self.bn1 = norm_layer(self.inplanes, momentum=0.9999)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1, embedding = self._make_layer(block, 64, layers[0], E=embedding)
@@ -182,38 +187,28 @@ class ResNet(nn.Module):
         norm_layer = self._norm_layer
         downsample_residual = None
         downsample_output = None
-        # stride=1
         if dilate:
             self.dilation *= stride
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
-            # For the commented out part:
-            # In order to maintain the same image shape, stride = 1
-            # This is done such that the same embeddings can be used
-            # stride = 1
-            # downsample = nn.Sequential(
-            #     conv1x1(self.inplanes, planes * block.expansion, stride),
-            #     norm_layer(planes * block.expansion),
-            # )
-            # downsample_residual is the same as the original downsample variable of resnet but changing dimensions d
+            # Downsample of the residual to match the dimensions of the NN output
             downsample_residual = nn.Sequential(
                 conv1x1(self.inplanes, planes * block.expansion, stride),
-                norm_layer(planes * block.expansion),
+                norm_layer(planes * block.expansion, momentum=0.9999),
             )
             if stride != 1:
-                #downsample outpat is the same as downsample_residual but without changing dimensions d
+                # When the stride is different than one, downsize the LambdaLayer output accordingly
                 downsample_output = nn.AvgPool2d(kernel_size=(3, 3), stride=stride, padding=(1, 1))
-                # downsample_output = nn.Sequential(
-                #     conv1x1(planes * block.expansion, planes * block.expansion, stride),
-                #     norm_layer(planes * block.expansion),
-                # )
 
         layers = []
         layers.append(block(self.inplanes, planes, E, stride, downsample_residual, downsample_output, self.groups,
-                            self.base_width, norm_layer, self.context_size, self.qk_size, self.heads, self.input_size))
+                            self.base_width, norm_layer, self.context_size, self.qk_size, self.heads))
         if stride != 1:
+            # If stride is not equal to one, downsize the LambdaLayer output accordingly
             self.input_size = int(self.input_size/stride**2)
             self.context_size = int(self.context_size / stride ** 2)
+
+            # Resize the embeddings according to the downsizing
             E = nn.Parameter(torch.Tensor(self.input_size, self.context_size, self.qk_size), requires_grad=True)
             torch.nn.init.normal_(E, mean=0.0, std=1.0)
         self.inplanes = planes * block.expansion
@@ -221,7 +216,7 @@ class ResNet(nn.Module):
             layers.append(block(self.inplanes, planes, E, groups=self.groups,
                                 base_width=self.base_width,
                                 norm_layer=norm_layer, context_size=self.context_size, qk_size=self.qk_size,
-                                heads=self.heads, input_size=self.input_size))
+                                heads=self.heads))
 
 
         return nn.Sequential(*layers), E
@@ -265,7 +260,7 @@ def _resnet(
 
 
 
-def resnet50(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def resnet50_lambda(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""ResNet-50 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
     Args:
@@ -276,7 +271,7 @@ def resnet50(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> 
                    **kwargs)
 
 
-def resnet101(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def resnet101_lambda(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""ResNet-101 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
     Args:
@@ -287,7 +282,7 @@ def resnet101(pretrained: bool = False, progress: bool = True, **kwargs: Any) ->
                    **kwargs)
 
 
-def resnet152(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def resnet152_lambda(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""ResNet-152 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
     Args:
@@ -298,7 +293,7 @@ def resnet152(pretrained: bool = False, progress: bool = True, **kwargs: Any) ->
                    **kwargs)
 
 
-def resnext50_32x4d(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def resnext50_32x4d_lambda(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""ResNeXt-50 32x4d model from
     `"Aggregated Residual Transformation for Deep Neural Networks" <https://arxiv.org/pdf/1611.05431.pdf>`_.
     Args:
@@ -311,7 +306,7 @@ def resnext50_32x4d(pretrained: bool = False, progress: bool = True, **kwargs: A
                    pretrained, progress, **kwargs)
 
 
-def resnext101_32x8d(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def resnext101_32x8d_lambda(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""ResNeXt-101 32x8d model from
     `"Aggregated Residual Transformation for Deep Neural Networks" <https://arxiv.org/pdf/1611.05431.pdf>`_.
     Args:
@@ -324,7 +319,7 @@ def resnext101_32x8d(pretrained: bool = False, progress: bool = True, **kwargs: 
                    pretrained, progress, **kwargs)
 
 
-def wide_resnet50_2(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def wide_resnet50_2_lambda(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""Wide ResNet-50-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_.
     The model is the same as ResNet except for the bottleneck number of channels
@@ -340,7 +335,7 @@ def wide_resnet50_2(pretrained: bool = False, progress: bool = True, **kwargs: A
                    pretrained, progress, **kwargs)
 
 
-def wide_resnet101_2(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+def wide_resnet101_2_lambda(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
     r"""Wide ResNet-101-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_.
     The model is the same as ResNet except for the bottleneck number of channels
