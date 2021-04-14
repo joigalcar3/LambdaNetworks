@@ -12,11 +12,13 @@ from tqdm import tqdm
 import numpy as np
 import time
 
-np.random.seed(0)
-torch.manual_seed(0)
+
 
 if __name__ == "__main__":
     #%% Input parameters
+    np.random.seed(0)
+    torch.manual_seed(0)
+    torch.cuda.manual_seed(0)
     args = load_user_input()
 
     # Map the network type to its name

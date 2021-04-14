@@ -90,7 +90,7 @@ class Bottleneck(nn.Module):
         out = self.relu(out)
 
         # In the case that the stride is not equal to 1, downsize the LambdaLayer output
-        out = self.conv2(out, out)
+        out = self.conv2(out)
         if self.downsample_output is not None:
             out = self.downsample_output(out)
         out = self.bn2(out)

@@ -54,12 +54,11 @@ class LambdaLayer(nn.Module):
         torch.nn.init.normal_(self.tokeys.weight, mean=0.0, std=std_kv)  # initialise of the keys projection matrix
         torch.nn.init.normal_(self.tovalues.weight, mean=0.0, std=std_kv)  # initialise of the values projection matrix
 
-    def forward(self, x, c):
+    def forward(self, x):
         '''
         Forward propagation of the LambdaLayer
         Args:
             x: input
-            c: context
 
         Returns:
 
@@ -71,7 +70,7 @@ class LambdaLayer(nn.Module):
         x = torch.reshape(x, [b, n, d])    # b-n-d
 
         # Reshape the context
-        c = torch.reshape(c, [b, self.m, d])
+        c = torch.reshape(x, [b, self.m, d])
 
         # Compute the keys
         keys = self.tokeys(c)                   # b-m-k
