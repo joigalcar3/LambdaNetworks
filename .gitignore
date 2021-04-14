@@ -136,8 +136,6 @@ CIFAR_10_train/
 
 *.iml
 
-runs/
-
 Checkpoints/
 logs/Apr01_17-20-47_LAPTOP-0DSB7BKB-log.txt
 
