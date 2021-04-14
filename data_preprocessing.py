@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def data_preprocessing(args):
     '''
-    Preprocessing the data and creating the dataloaders for trianing and testing
+    Preprocessing the data and creating the dataloaders for training and testing
     Args:
         args: user input
 
