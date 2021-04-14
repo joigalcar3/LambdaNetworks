@@ -122,7 +122,6 @@ within the runs/yyyyy folder that you just created.
 ## More info
 
 Hope you find our work helpful for understanding the lambda layers and it will help you to integrate them in your personal 
-project. Do not hesitate to reach out to us in the case that you have any questions or we can provide you with our 
- insights regarding this novel architecture at:
+project. Do not hesitate to reach out to us in the case that you have any questions:
 * Jose Ignacio de Alvear Cardenas: [j.i.dealvearcardenas@student.tudelft.nl](mailto:j.i.dealvearcardenas@student.tudelft.nl)
 * Wesley de Vries: [w.devries-1@student.tudelft.nl](mailto:w.devries-1@student.tudelft.nl)
