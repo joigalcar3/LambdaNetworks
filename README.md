@@ -72,7 +72,7 @@ Luckily, Bello clarified that he will publish the code corresponding to the Lamb
 ## Our implementation
 For a complete explanation of the lambda layers, their implementation and their integration within the ResNet-50 
 architecture, as well as our results, conclusions and recommendations derived from this work can be found in our [blog]. 
-Besides that, we have also designed a [poster] which briefly illustrates the work carried out as part of this 
+Besides that, we have also designed a [poster](https://github.com/joigalcar3/LambdaNetworks/blob/main/Poster.pdf) which briefly illustrates the work carried out as part of this 
 reproducibility project. 
 
 ## How is this code structured
