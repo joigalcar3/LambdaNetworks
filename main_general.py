@@ -60,7 +60,7 @@ if __name__ == "__main__":
         end_test = time.time()
 
         # Print train and test accuracy and train and test loss. Log data. Save checkpoint. Store info for TensorBoard
-        log_data(resnet_nn, start_train, train_loss, train_acc, end_train, total_train_time, start_test, test_loss,
+        total_train_time, total_test_time = log_data(resnet_nn, start_train, train_loss, train_acc, end_train, total_train_time, start_test, test_loss,
                  test_acc, end_test, total_test_time, f, epoch, optimizer, folder_checkpoint, writer)
 
         # Obtain the new learning rate by choosing the right scheduler

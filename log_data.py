@@ -65,3 +65,5 @@ def log_data(resnet_nn, start_train, train_loss, train_acc, end_train, total_tra
     # Write metrics to Tensorboard
     writer.add_scalars("Loss", {'Train': train_loss, 'Test': test_loss}, epoch)
     writer.add_scalars('Accuracy', {'Train': train_acc, 'Test': test_acc}, epoch)
+
+    return total_train_time, total_test_time

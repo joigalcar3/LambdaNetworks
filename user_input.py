@@ -20,7 +20,7 @@ def load_user_input():
     parser.add_argument('--epochs', type=int, default=90,
                         help='Number of epochs: suggested by Robert-Jan Bruintjes and the LambdaNetworks paper')
     parser.add_argument('--weight_decay', type=float, default=1e-4, help='Weight decay for the Adam')
-    parser.add_argument('--initial_lr', type=float, default=0.005, help='Initial learning rate')
+    parser.add_argument('--initial_lr', type=float, default=0.0005, help='Initial learning rate')
     parser.add_argument('--th', type=int, default=5, help='Threshold number of epochs to change scheduler')
     parser.add_argument('--model_type', type=int, default=1, help='Type of model: 0 = baseline; 1 = lambda')
     parser.add_argument('--resume', type=bool, default=False, help='Resume from the latest checkpoint')

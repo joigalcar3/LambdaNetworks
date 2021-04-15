@@ -2,7 +2,7 @@
 
 
 ## Introduction
-_LambdaNetworks: Modeling Long-Range Interactions Without Attention_ builds on the foundations laid by Irwan Bello in "Modeling long-range interactions without attention" 
+This work builds on the foundations laid by Irwan Bello in "LambdaNetworks: Modeling long-range interactions without attention" 
 [(Bello, 2021)](https://arxiv.org/abs/2102.08602). Bello proposes a method where long-range interactions are modeled by layers which 
 transform contexts into linear functions called lambdas, in order to avoid the use of attention maps. The great advantage 
 of lambda layers is that they require much less compute than self-attention mechanisms according to the original paper 
